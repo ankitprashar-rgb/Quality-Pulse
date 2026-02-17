@@ -5,7 +5,7 @@ import { uploadFile } from '../services/googleDrive';
 import { getTodayDate, calculateRejectionRate, strictTruncate } from '../utils/helpers';
 import './ProductionEntry.css';
 
-export default function ProductionEntry({ clients, mediaOptions, onSaved, showToast }) {
+export default function ProductionEntry({ clients, mediaOptions, onSaved, showToast, prefillData }) {
     const [date, setDate] = useState(getTodayDate());
     const [clientName, setClientName] = useState('');
     const [vertical, setVertical] = useState('');
@@ -14,6 +14,14 @@ export default function ProductionEntry({ clients, mediaOptions, onSaved, showTo
     const [projects, setProjects] = useState([]);
     const [lineItems, setLineItems] = useState([]);
     const [loading, setLoading] = useState(false);
+
+    // Handle pre-fill data from Pending Production
+    useEffect(() => {
+        if (prefillData) {
+            setClientName(prefillData.client);
+            setProjectName(prefillData.project);
+        }
+    }, [prefillData]);
 
     // Load projects when client changes
     useEffect(() => {

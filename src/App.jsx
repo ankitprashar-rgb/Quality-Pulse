@@ -64,10 +64,21 @@ function App() {
     }, duration);
   }
 
+  const [selectedProject, setSelectedProject] = useState(null);
+
+  function handleSelectProject(proj) {
+    setSelectedProject(proj);
+    // Scroll to Production Entry after a short delay to ensure UI updates
+    setTimeout(() => {
+      document.getElementById('production-entry-form')?.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
+  }
+
   function handleEntrySaved() {
     // Reload today's metrics
     calculateMetrics('today').then(setMetrics).catch(console.error);
     showToast('Entry saved successfully!');
+    setSelectedProject(null); // Clear selection after saving
   }
 
   return (
@@ -102,14 +113,17 @@ function App() {
 
       <TodayOverview />
 
-      <PendingProduction />
+      <PendingProduction onSelectProject={handleSelectProject} />
 
-      <ProductionEntry
-        clients={clients}
-        mediaOptions={mediaOptions}
-        onSaved={handleEntrySaved}
-        showToast={showToast}
-      />
+      <div id="production-entry-form">
+        <ProductionEntry
+          clients={clients}
+          mediaOptions={mediaOptions}
+          onSaved={handleEntrySaved}
+          showToast={showToast}
+          prefillData={selectedProject}
+        />
+      </div>
 
       <ClientExplorer clients={clients} />
 

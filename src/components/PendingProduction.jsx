@@ -4,7 +4,7 @@ import { fetchRejectionLogs } from '../services/supabase';
 import { formatDate } from '../utils/helpers';
 import './PendingProduction.css';
 
-export default function PendingProduction() {
+export default function PendingProduction({ onSelectProject }) {
     const [pendingItems, setPendingItems] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [loading, setLoading] = useState(false);
@@ -104,6 +104,9 @@ export default function PendingProduction() {
             <div className="card-header">
                 <h2>Pending Production</h2>
                 <div className="card-subtitle">Work orders pending or overdue</div>
+                <div className="instruction-text" style={{ fontSize: '13px', color: '#6366f1', marginTop: '4px', fontWeight: '500' }}>
+                    💡 Click on any card below to automatically load the project for production entry.
+                </div>
             </div>
             <div className="card-body">
                 <div className="pending-toolbar">
@@ -135,7 +138,11 @@ export default function PendingProduction() {
                         {activeItems.length > 0 && (
                             <div className="pending-grid">
                                 {activeItems.map((item, idx) => (
-                                    <PendingCard key={idx} item={item} />
+                                    <PendingCard
+                                        key={idx}
+                                        item={item}
+                                        onClick={() => onSelectProject?.({ client: item.client, project: item.project })}
+                                    />
                                 ))}
                             </div>
                         )}
@@ -154,7 +161,11 @@ export default function PendingProduction() {
                                 {notAddedOpen && (
                                     <div className="pending-grid" style={{ marginTop: '10px' }}>
                                         {notAddedItems.map((item, idx) => (
-                                            <PendingCard key={`na-${idx}`} item={item} />
+                                            <PendingCard
+                                                key={`na-${idx}`}
+                                                item={item}
+                                                onClick={() => onSelectProject?.({ client: item.client, project: item.project })}
+                                            />
                                         ))}
                                     </div>
                                 )}
@@ -167,7 +178,7 @@ export default function PendingProduction() {
     );
 }
 
-function PendingCard({ item }) {
+function PendingCard({ item, onClick }) {
     const statusLabels = {
         red: 'OVERDUE',
         orange: 'PARTIAL DELIVERY',
@@ -180,7 +191,7 @@ function PendingCard({ item }) {
         : null;
 
     return (
-        <div className={`pending-card ${item.status}`}>
+        <div className={`pending-card ${item.status}`} onClick={onClick} style={{ cursor: 'pointer' }}>
             <div className="pc-header-bar">{statusLabels[item.status]}</div>
             <div className="pc-body">
                 <div className="pc-identity">
