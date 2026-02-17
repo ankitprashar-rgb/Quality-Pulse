@@ -77,24 +77,90 @@
 
 .pc-header-bar {
     padding: 6px 12px;
-    font-size: 9px;
+    font-size: 11px;
     font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
     color: white;
-    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
+.archive-btn {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.2s;
+    line-height: 1;
+}
+
+.archive-btn:hover {
+    background: rgba(255, 255, 255, 0.4);
+}
+
+/* Specific Statuses */
 .pending-card.red .pc-header-bar {
-    background: #dc2626;
+    background: #ef4444;
+}
+
+.pending-card.red {
+    border-left: 4px solid #ef4444;
 }
 
 .pending-card.orange .pc-header-bar {
-    background: #ea580c;
+    background: #f59e0b;
+}
+
+.pending-card.orange {
+    border-left: 4px solid #f59e0b;
 }
 
 .pending-card.yellow .pc-header-bar {
-    background: #d97706;
+    background: #6366f1;
+}
+
+.pending-card.yellow {
+    border-left: 4px solid #6366f1;
+}
+
+.pending-card.green .pc-header-bar {
+    background: #10b981;
+}
+
+.pending-card.green {
+    border-left: 4px solid #10b981;
+}
+
+.pending-card.archived .pc-header-bar {
+    background: #9ca3af;
+}
+
+.pending-card.archived {
+    border-left: 4px solid #9ca3af;
+    opacity: 0.8;
+}
+
+.pending-card.archived:hover {
+    opacity: 1;
+}
+
+.count-badge.green {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.count-badge.archived {
+    background: #f3f4f6;
+    color: #374151;
 }
 
 .pc-body {
@@ -102,9 +168,25 @@
 }
 
 .pc-identity {
-    margin-bottom: 12px;
+    margin-bottom: 20px;
+    position: relative;
     padding-bottom: 10px;
     border-bottom: 1px solid #f3f4f6;
+}
+
+.pc-approval-date {
+    position: absolute;
+    top: 0;
+    right: 0;
+    font-size: 11px;
+    color: #6b7280;
+    font-weight: 500;
+}
+
+.pc-approval-date::before {
+    content: "Approved: ";
+    font-weight: 400;
+    color: #9ca3af;
 }
 
 .pc-proj-name {

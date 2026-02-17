@@ -90,7 +90,8 @@ export async function fetchProjectsForClient(clientName) {
             printMedia: getValue(p, ['Print Media', 'Media']),
             lamMedia: getValue(p, ['Lamination', 'Lamination Media', 'Lam Media']),
             size: getValue(p, ['Size']),
-            printerModel: getValue(p, ['Printer Model', 'Printer'])
+            printerModel: getValue(p, ['Printer Model', 'Printer']),
+            approvalDate: getValue(p, ['Approval Date'])
         }));
 }
 
@@ -111,7 +112,8 @@ export async function fetchAllProjects() {
         printMedia: getValue(p, ['Print Media', 'Media']),
         lamMedia: getValue(p, ['Lamination', 'Lamination Media', 'Lam Media']),
         size: getValue(p, ['Size']),
-        printerModel: getValue(p, ['Printer Model', 'Printer'])
+        printerModel: getValue(p, ['Printer Model', 'Printer']),
+        approvalDate: getValue(p, ['Approval Date'])
     })).filter(p => p.client && p.project);
 }
 

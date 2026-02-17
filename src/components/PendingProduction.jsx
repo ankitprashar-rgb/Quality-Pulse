@@ -8,9 +8,13 @@ export default function PendingProduction({ onSelectProject }) {
     const [pendingItems, setPendingItems] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [loading, setLoading] = useState(false);
-    const [notAddedOpen, setNotAddedOpen] = useState(false);
+    const [archiveOpen, setArchiveOpen] = useState(false);
+    const [archivedKeys, setArchivedKeys] = useState(() => {
+        const saved = localStorage.getItem('qp_archived_projects');
+        return saved ? JSON.parse(saved) : [];
+    });
 
-    useEffect(() => { loadPendingProduction(); }, []);
+    useEffect(() => { loadPendingProduction(); }, [archivedKeys]);
 
     async function loadPendingProduction() {
         setLoading(true);
@@ -18,7 +22,7 @@ export default function PendingProduction({ onSelectProject }) {
             const projects = await fetchAllProjects();
             const logs = await fetchRejectionLogs({});
             const today = new Date();
-            const pending = [];
+            const items = [];
 
             const projectMap = new Map();
             projects.forEach(p => {
@@ -27,7 +31,8 @@ export default function PendingProduction({ onSelectProject }) {
                     projectMap.set(key, {
                         client: p.client, project: p.project,
                         vertical: p.vertical, masterQty: 0,
-                        deliveryDate: p.deliveryDate
+                        deliveryDate: p.deliveryDate,
+                        approvalDate: p.approvalDate
                     });
                 }
                 const g = projectMap.get(key);
@@ -35,9 +40,13 @@ export default function PendingProduction({ onSelectProject }) {
                 if (p.deliveryDate && (!g.deliveryDate || new Date(p.deliveryDate) < new Date(g.deliveryDate))) {
                     g.deliveryDate = p.deliveryDate;
                 }
+                if (p.approvalDate && (!g.approvalDate || new Date(p.approvalDate) < new Date(g.approvalDate))) {
+                    g.approvalDate = p.approvalDate;
+                }
             });
 
             Array.from(projectMap.values()).forEach(project => {
+                const key = `${project.client}|||${project.project}`;
                 const projectLogs = logs.filter(
                     log => log.client_name === project.client && log.project_name === project.project
                 );
@@ -45,30 +54,37 @@ export default function PendingProduction({ onSelectProject }) {
                 const pendingQty = Math.max(0, project.masterQty - totalDelivered);
 
                 let deliveryDate = project.deliveryDate ? new Date(project.deliveryDate) : null;
+                const isManualArchive = archivedKeys.includes(key);
 
-                let status = 'yellow';
+                let status = (projectLogs.length === 0 || isManualArchive) ? 'archived' : 'yellow';
                 let overdueDays = 0;
                 const isOverdue = deliveryDate && deliveryDate < today;
 
-                if (isOverdue) {
-                    status = 'red';
-                    overdueDays = Math.floor((today - deliveryDate) / (1000 * 60 * 60 * 24));
-                } else if (projectLogs.length > 0 && pendingQty > 0) {
-                    status = 'orange';
+                if (status !== 'archived') {
+                    if (isOverdue) {
+                        status = 'red';
+                        overdueDays = Math.floor((today - deliveryDate) / (1000 * 60 * 60 * 24));
+                    } else if (projectLogs.length > 0 && pendingQty > 0) {
+                        status = 'orange';
+                    } else if (pendingQty === 0) {
+                        status = 'green'; // Completed
+                    }
                 }
 
-                if (pendingQty > 0) {
-                    pending.push({
+                if (pendingQty > 0 || status === 'archived') {
+                    items.push({
+                        key,
                         client: project.client, project: project.project,
                         vertical: project.vertical, masterQty: project.masterQty,
                         delivered: totalDelivered, pendingQty,
-                        deliveryDate, status, overdueDays
+                        deliveryDate, approvalDate: project.approvalDate,
+                        status, overdueDays
                     });
                 }
             });
 
-            pending.sort((a, b) => {
-                const statusOrder = { red: 0, orange: 1, yellow: 2 };
+            items.sort((a, b) => {
+                const statusOrder = { red: 0, orange: 1, yellow: 2, green: 3, archived: 4 };
                 if (statusOrder[a.status] !== statusOrder[b.status]) {
                     return statusOrder[a.status] - statusOrder[b.status];
                 }
@@ -77,7 +93,7 @@ export default function PendingProduction({ onSelectProject }) {
                 return dateA - dateB;
             });
 
-            setPendingItems(pending);
+            setPendingItems(items);
         } catch (error) {
             console.error('Error loading pending production:', error);
         } finally {
@@ -85,19 +101,30 @@ export default function PendingProduction({ onSelectProject }) {
         }
     }
 
+    const toggleArchive = (e, key) => {
+        e.stopPropagation();
+        const newArchived = archivedKeys.includes(key)
+            ? archivedKeys.filter(k => k !== key)
+            : [...archivedKeys, key];
+        setArchivedKeys(newArchived);
+        localStorage.setItem('qp_archived_projects', JSON.stringify(newArchived));
+    };
+
     const filteredItems = pendingItems.filter(item =>
         searchTerm === '' ||
         item.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.project.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    // Separate: red+orange vs yellow (Not Added)
-    const activeItems = filteredItems.filter(i => i.status !== 'yellow');
-    const notAddedItems = filteredItems.filter(i => i.status === 'yellow');
+    // Separate: archived vs others
+    const activeItems = filteredItems.filter(i => i.status !== 'archived');
+    const archivedItems = filteredItems.filter(i => i.status === 'archived');
 
     const redCount = filteredItems.filter(i => i.status === 'red').length;
     const orangeCount = filteredItems.filter(i => i.status === 'orange').length;
-    const yellowCount = notAddedItems.length;
+    const yellowCount = filteredItems.filter(i => i.status === 'yellow').length;
+    const greenCount = filteredItems.filter(i => i.status === 'green').length;
+    const archivedCount = archivedItems.length;
 
     return (
         <section className="card">
@@ -121,6 +148,7 @@ export default function PendingProduction({ onSelectProject }) {
                         <span className="count-badge red">{redCount} OVERDUE</span>
                         <span className="count-badge orange">{orangeCount} PARTIAL</span>
                         <span className="count-badge yellow">{yellowCount} NOT ADDED</span>
+                        <span className="count-badge green">{greenCount} COMPLETED</span>
                     </div>
                 </div>
 
@@ -128,13 +156,13 @@ export default function PendingProduction({ onSelectProject }) {
                     <div style={{ padding: '20px', textAlign: 'center', color: '#6b7280' }}>
                         Loading pending production...
                     </div>
-                ) : activeItems.length === 0 && notAddedItems.length === 0 ? (
+                ) : activeItems.length === 0 && archivedItems.length === 0 ? (
                     <div style={{ padding: '20px', textAlign: 'center', color: '#6b7280' }}>
                         {searchTerm ? 'No matching items found' : 'No pending production items'}
                     </div>
                 ) : (
                     <>
-                        {/* ── Active items (red + orange) ── */}
+                        {/* ── Active items (red + orange + yellow + green) ── */}
                         {activeItems.length > 0 && (
                             <div className="pending-grid">
                                 {activeItems.map((item, idx) => (
@@ -142,29 +170,32 @@ export default function PendingProduction({ onSelectProject }) {
                                         key={idx}
                                         item={item}
                                         onClick={() => onSelectProject?.({ client: item.client, project: item.project })}
+                                        onArchive={(e) => toggleArchive(e, item.key)}
                                     />
                                 ))}
                             </div>
                         )}
 
-                        {/* ── Not Added — collapsible section ── */}
-                        {notAddedItems.length > 0 && (
+                        {/* ── Archive Projects — collapsible section ── */}
+                        {archivedItems.length > 0 && (
                             <div className="not-added-section">
                                 <button
                                     className="not-added-toggle"
-                                    onClick={() => setNotAddedOpen(!notAddedOpen)}
+                                    onClick={() => setArchiveOpen(!archiveOpen)}
                                 >
-                                    <span className="not-added-icon">{notAddedOpen ? '▾' : '▸'}</span>
-                                    <span>Not Added to Rejection Log</span>
-                                    <span className="not-added-count">{yellowCount}</span>
+                                    <span className="not-added-icon">{archiveOpen ? '▾' : '▸'}</span>
+                                    <span>Archive Projects</span>
+                                    <span className="not-added-count">{archivedCount}</span>
                                 </button>
-                                {notAddedOpen && (
+                                {archiveOpen && (
                                     <div className="pending-grid" style={{ marginTop: '10px' }}>
-                                        {notAddedItems.map((item, idx) => (
+                                        {archivedItems.map((item, idx) => (
                                             <PendingCard
                                                 key={`na-${idx}`}
                                                 item={item}
                                                 onClick={() => onSelectProject?.({ client: item.client, project: item.project })}
+                                                onArchive={(e) => toggleArchive(e, item.key)}
+                                                isArchived={true}
                                             />
                                         ))}
                                     </div>
@@ -178,11 +209,13 @@ export default function PendingProduction({ onSelectProject }) {
     );
 }
 
-function PendingCard({ item, onClick }) {
+function PendingCard({ item, onClick, onArchive, isArchived }) {
     const statusLabels = {
         red: 'OVERDUE',
         orange: 'PARTIAL DELIVERY',
-        yellow: 'NOT ADDED TO REJECTION LOG'
+        yellow: 'PENDING PRODUCTION',
+        green: 'COMPLETED',
+        archived: 'ARCHIVED'
     };
 
     const today = new Date();
@@ -192,9 +225,19 @@ function PendingCard({ item, onClick }) {
 
     return (
         <div className={`pending-card ${item.status}`} onClick={onClick} style={{ cursor: 'pointer' }}>
-            <div className="pc-header-bar">{statusLabels[item.status]}</div>
+            <div className="pc-header-bar">
+                <span>{statusLabels[item.status]}</span>
+                <button
+                    className="archive-btn"
+                    onClick={onArchive}
+                    title={isArchived ? "Unarchive" : "Archive"}
+                >
+                    {isArchived ? '↩' : '×'}
+                </button>
+            </div>
             <div className="pc-body">
                 <div className="pc-identity">
+                    <div className="pc-approval-date">{item.approvalDate || '-'}</div>
                     <div className="pc-client-name" title={item.client}>{item.client}</div>
                     <div className="pc-proj-name" title={item.project}>{item.project}</div>
                 </div>
