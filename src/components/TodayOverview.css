@@ -1,0 +1,445 @@
+/* ── Header Actions & KPI ── */
+.card-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.kpi-card {
+    padding: 8px 16px;
+    border-radius: 10px;
+    background: #f3f4f6;
+    border: 1px solid #e5e7eb;
+    text-align: right;
+    min-width: 140px;
+    transition: all 0.3s ease;
+}
+
+.kpi-card.green {
+    background: #d4de47;
+    border-color: #d4de47;
+    box-shadow: 0 4px 6px -1px rgba(212, 222, 71, 0.2);
+}
+
+.kpi-card.red {
+    background: #fef2f2;
+    border-color: #fecaca;
+    box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.1);
+}
+
+.kpi-label {
+    display: block;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #6b7280;
+    margin-bottom: 2px;
+}
+
+.kpi-card.green .kpi-label {
+    color: #555c1e;
+}
+
+.kpi-value {
+    display: block;
+    font-size: 20px;
+    font-weight: 900;
+}
+
+.kpi-card.green .kpi-value {
+    color: #111827;
+}
+
+.kpi-card.red .kpi-value {
+    color: #dc2626;
+}
+
+/* ── Overview Table ── */
+.overview-table {
+    overflow-x: auto;
+}
+
+.overview-table table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.overview-table thead th {
+    text-align: left;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #6b7280;
+    padding: 8px 10px;
+    border-bottom: 2px solid #e5e7eb;
+}
+
+.th-icon {
+    width: 28px !important;
+    padding-right: 0 !important;
+}
+
+/* ── Clickable rows ── */
+.overview-row {
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.overview-row:hover {
+    background: #f9fafb;
+}
+
+.overview-row.expanded {
+    background: #f3f4f6;
+    border-bottom: none;
+}
+
+.overview-row td {
+    padding: 10px 10px;
+    border-bottom: 1px solid #f3f4f6;
+    color: #111827;
+}
+
+/* Bold columns: Client, Project, Rejection % */
+.col-bold {
+    font-weight: 700;
+}
+
+.expand-icon {
+    color: #d4de47;
+    font-size: 18px;
+    font-weight: 800;
+    width: 28px;
+    text-align: center;
+    line-height: 1;
+    text-shadow: 0 0 0 #d4de47;
+    /* force yellow if inherited color overrides */
+    -webkit-text-fill-color: #d4de47;
+}
+
+.entry-count {
+    font-size: 10px;
+    color: #9ca3af;
+    font-weight: 400;
+}
+
+.text-red {
+    color: #dc2626 !important;
+}
+
+/* ── Detail (expanded) panel — rounded box ── */
+.detail-row td {
+    padding: 0 !important;
+    border-bottom: none !important;
+    background: transparent;
+}
+
+.detail-panel {
+    margin: 6px 12px 12px;
+    padding: 16px 20px;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+}
+
+/* ── Entry list (individual rows) — FIRST section ── */
+.entry-list {
+    margin-bottom: 14px;
+}
+
+.entry-list-header {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #6b7280;
+    margin-bottom: 6px;
+}
+
+.entry-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 7px 10px;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    margin-bottom: 4px;
+}
+
+.entry-info {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    font-size: 12px;
+}
+
+.ei-product {
+    font-weight: 600;
+    color: #111827;
+}
+
+.ei-sep {
+    color: #d1d5db;
+}
+
+.ei-batch,
+.ei-rej {
+    color: #6b7280;
+}
+
+/* ── Icon-only action buttons ── */
+.entry-actions {
+    display: flex;
+    gap: 4px;
+}
+
+.icon-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all 0.12s ease;
+    background: #f3f4f6;
+    color: #6b7280;
+}
+
+.icon-btn:hover {
+    transform: scale(1.08);
+}
+
+.icon-btn.edit {
+    border-color: #d1d5db;
+}
+
+.icon-btn.edit:hover {
+    background: #d4de47;
+    border-color: #d4de47;
+    color: #111827;
+}
+
+.icon-btn.delete {
+    border-color: #fecaca;
+    background: #fef2f2;
+    color: #ef4444;
+}
+
+.icon-btn.delete:hover {
+    background: #ef4444;
+    color: #fff;
+}
+
+.icon-btn.export {
+    border-color: #bfdbfe;
+    background: #f0f9ff;
+    color: #3b82f6;
+}
+
+.icon-btn.export:hover {
+    background: #3b82f6;
+    color: #fff;
+}
+
+/* ── Summary boxes — full width, spread evenly ── */
+.summary-boxes {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
+    gap: 8px;
+}
+
+.summary-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 6px;
+    border-radius: 8px;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+}
+
+.summary-box.has-stock {
+    background: #d4de47;
+    border-color: #d4de47;
+}
+
+.summary-box.has-stock .sb-label,
+.summary-box.has-stock .sb-value {
+    color: #000 !important;
+}
+
+.sb-label {
+    font-size: 9px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #6b7280;
+    line-height: 1;
+    margin-bottom: 3px;
+    text-align: center;
+}
+
+.sb-value {
+    font-size: 16px;
+    font-weight: 700;
+    color: #111827;
+    line-height: 1.1;
+}
+
+.sb-value.rej {
+    color: #dc2626;
+}
+
+.text-red {
+    color: #ef4444 !important;
+}
+
+.text-green {
+    color: #10b981 !important;
+}
+
+/* ── Edit mode ── */
+.entry-edit {
+    width: 100%;
+}
+
+.edit-fields {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.ef {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.ef label {
+    font-size: 9px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: #6b7280;
+}
+
+.ef input {
+    width: 80px;
+    padding: 4px 6px;
+    font-size: 12px;
+    border-radius: 6px;
+    border: 1px solid #d1d5db;
+    outline: none;
+}
+
+.ef input:focus {
+    border-color: #d4de47;
+}
+
+.edit-actions {
+    display: flex;
+    gap: 6px;
+}
+
+.action-btn {
+    padding: 5px 12px;
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all 0.12s ease;
+}
+
+.action-btn.save {
+    background: #d4de47;
+    color: #111827;
+    border-color: #c5cf30;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.action-btn.cancel {
+    background: #f3f4f6;
+    color: #6b7280;
+    border-color: #d1d5db;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.action-btn.delete {
+    background: #ef4444;
+    color: #fff;
+}
+
+/* ── Delete confirmation modal ── */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    backdrop-filter: blur(2px);
+}
+
+.modal-box {
+    background: #fff;
+    border-radius: 12px;
+    padding: 24px;
+    max-width: 380px;
+    width: 90%;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+}
+
+.modal-title {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.modal-box p {
+    font-size: 13px;
+    color: #6b7280;
+    margin: 0 0 16px;
+    line-height: 1.5;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+    .summary-boxes {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .overview-table thead th:nth-child(4),
+    .overview-row td:nth-child(4) {
+        display: none;
+    }
+
+    .entry-info {
+        flex-wrap: wrap;
+        gap: 4px;
+    }
+
+    .entry-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+    }
+}

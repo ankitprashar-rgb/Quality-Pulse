@@ -1,0 +1,235 @@
+.pending-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.pending-search {
+    flex: 1;
+    min-width: 200px;
+    font-size: 13px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid #d1d5db;
+    outline: none;
+}
+
+.pending-search:focus {
+    border-color: #d4de47;
+    box-shadow: 0 0 0 1px #d4de4710;
+}
+
+.pending-counts {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.count-badge {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 999px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.count-badge.red {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.count-badge.orange {
+    background: #ffedd5;
+    color: #ea580c;
+}
+
+.count-badge.yellow {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+.pending-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 12px;
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+.pending-card {
+    background: white;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.pending-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.pc-header-bar {
+    padding: 6px 12px;
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: white;
+    text-align: center;
+}
+
+.pending-card.red .pc-header-bar {
+    background: #dc2626;
+}
+
+.pending-card.orange .pc-header-bar {
+    background: #ea580c;
+}
+
+.pending-card.yellow .pc-header-bar {
+    background: #d97706;
+}
+
+.pc-body {
+    padding: 12px;
+}
+
+.pc-identity {
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.pc-proj-name {
+    font-size: 12px;
+    color: #6b7280;
+    margin-bottom: 4px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.pc-client-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: #111827;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.pc-metrics-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 12px;
+}
+
+.pc-metric-item {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.pc-align-right {
+    align-items: flex-end;
+}
+
+.pc-m-label {
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #9ca3af;
+    font-weight: 600;
+}
+
+.pc-m-val {
+    font-size: 18px;
+    font-weight: 700;
+    color: #111827;
+    line-height: 1;
+}
+
+.pc-m-val-sm {
+    font-size: 14px;
+    font-weight: 600;
+    color: #111827;
+    line-height: 1;
+}
+
+.pc-val-urgent {
+    color: #dc2626;
+}
+
+/* ── Not Added collapsible section ── */
+.not-added-section {
+    margin-top: 20px;
+    border-top: 1px solid #e5e7eb;
+    padding-top: 14px;
+}
+
+.not-added-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 10px 14px;
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    color: #92400e;
+    transition: background 0.15s ease;
+}
+
+.not-added-toggle:hover {
+    background: #fef3c7;
+}
+
+.not-added-icon {
+    color: #d4de47;
+    font-size: 16px;
+    font-weight: 800;
+    -webkit-text-fill-color: #d4de47;
+}
+
+.not-added-count {
+    margin-left: auto;
+    background: #d97706;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 999px;
+}
+
+@media (max-width: 900px) {
+    .pending-grid {
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    }
+}
+
+@media (max-width: 640px) {
+    .pending-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .pending-search {
+        width: 100%;
+    }
+
+    .pending-counts {
+        justify-content: space-between;
+    }
+
+    .pending-grid {
+        grid-template-columns: 1fr;
+    }
+}

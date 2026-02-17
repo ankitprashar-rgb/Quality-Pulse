@@ -1,0 +1,223 @@
+/* ── Explorer toolbar ── */
+.explorer-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+}
+
+.explorer-tabs {
+    display: flex;
+    background: #f3f4f6;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.explorer-tab {
+    padding: 7px 16px;
+    font-size: 12px;
+    font-weight: 600;
+    border: none;
+    background: transparent;
+    color: #6b7280;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.explorer-tab:hover {
+    color: #374151;
+}
+
+.explorer-tab.active {
+    background: #111827;
+    color: white;
+    border-radius: 6px;
+}
+
+.explorer-search {
+    flex: 1;
+    min-width: 180px;
+    padding: 7px 12px;
+    font-size: 13px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    outline: none;
+}
+
+.explorer-search:focus {
+    border-color: #d4de47;
+    box-shadow: 0 0 0 1px #d4de4710;
+}
+
+.export-btn {
+    white-space: nowrap;
+}
+
+/* ── Shared Table Styles ── */
+.overview-table {
+    overflow-x: auto;
+}
+
+.overview-table table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.overview-table thead th {
+    text-align: left;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #6b7280;
+    padding: 8px 10px;
+    border-bottom: 2px solid #e5e7eb;
+}
+
+.th-icon {
+    width: 28px !important;
+    padding-right: 0 !important;
+}
+
+.overview-row {
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.overview-row:hover {
+    background: #f9fafb;
+}
+
+.overview-row.expanded {
+    background: #f3f4f6;
+    border-bottom: none;
+}
+
+.overview-row td {
+    padding: 10px 10px;
+    border-bottom: 1px solid #f3f4f6;
+    color: #111827;
+}
+
+.col-bold {
+    font-weight: 700;
+}
+
+.expand-icon {
+    color: #d4de47;
+    font-size: 18px;
+    font-weight: 800;
+    width: 28px;
+    text-align: center;
+    line-height: 1;
+    -webkit-text-fill-color: #d4de47;
+}
+
+.entry-count {
+    font-size: 10px;
+    color: #9ca3af;
+    font-weight: 400;
+}
+
+.text-red {
+    color: #dc2626 !important;
+}
+
+.detail-row td {
+    padding: 0 !important;
+    border-bottom: none !important;
+    background: transparent;
+}
+
+.detail-panel {
+    margin: 6px 12px 12px;
+    padding: 16px 20px;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+}
+
+.summary-boxes {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
+    gap: 8px;
+}
+
+.summary-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 6px;
+    border-radius: 8px;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+}
+
+.sb-label {
+    font-size: 9px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #6b7280;
+    line-height: 1;
+    margin-bottom: 3px;
+    text-align: center;
+}
+
+.sb-value {
+    font-size: 16px;
+    font-weight: 700;
+    color: #111827;
+    line-height: 1.1;
+}
+
+.sb-value.rej {
+    color: #dc2626;
+}
+
+/* ── Legacy results table (if still used anywhere) ── */
+.results-table {
+    overflow-x: auto;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+}
+
+.results-table table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+}
+
+.results-table th {
+    background: #f9fafb;
+    padding: 10px 12px;
+    text-align: left;
+    font-weight: 600;
+    color: #374151;
+    border-bottom: 1px solid #e5e7eb;
+    text-transform: uppercase;
+    font-size: 10px;
+    letter-spacing: 0.05em;
+}
+
+.results-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #f3f4f6;
+    color: #111827;
+}
+
+@media (max-width: 900px) {
+    .summary-boxes {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 640px) {
+    .explorer-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}
