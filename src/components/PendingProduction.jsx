@@ -56,18 +56,21 @@ export default function PendingProduction({ onSelectProject }) {
                 let deliveryDate = project.deliveryDate ? new Date(project.deliveryDate) : null;
                 const isManualArchive = archivedKeys.includes(key);
 
-                let status = (projectLogs.length === 0 || isManualArchive) ? 'archived' : 'yellow';
                 let overdueDays = 0;
                 const isOverdue = deliveryDate && deliveryDate < today;
 
-                if (status !== 'archived') {
+                let status = isManualArchive ? 'archived' : 'yellow';
+
+                if (!isManualArchive) {
                     if (isOverdue) {
                         status = 'red';
                         overdueDays = Math.floor((today - deliveryDate) / (1000 * 60 * 60 * 24));
                     } else if (projectLogs.length > 0 && pendingQty > 0) {
                         status = 'orange';
                     } else if (pendingQty === 0) {
-                        status = 'green'; // Completed
+                        status = 'green';
+                    } else {
+                        status = 'yellow'; // 0 entries logged yet
                     }
                 }
 
@@ -147,7 +150,7 @@ export default function PendingProduction({ onSelectProject }) {
                     <div className="pending-counts">
                         <span className="count-badge red">{redCount} OVERDUE</span>
                         <span className="count-badge orange">{orangeCount} PARTIAL</span>
-                        <span className="count-badge yellow">{yellowCount} NOT ADDED</span>
+                        <span className="count-badge yellow">{yellowCount} PENDING</span>
                         <span className="count-badge green">{greenCount} COMPLETED</span>
                     </div>
                 </div>
