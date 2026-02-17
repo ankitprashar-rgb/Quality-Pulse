@@ -27,24 +27,32 @@ async function fetchSheetData(sheetId, range) {
 }
 
 /**
- * Parse sheet data into objects with headers
+ * Parse sheet data into objects with headers (trimmed for robustness)
  */
 function parseSheetData(rows) {
     if (!rows || rows.length === 0) return [];
 
-    const headers = rows[0];
+    const headers = rows[0].map(h => (h || '').trim());
     const data = [];
 
     for (let i = 1; i < rows.length; i++) {
         const row = rows[i];
         const obj = {};
         headers.forEach((header, index) => {
-            obj[header] = row[index] || '';
+            if (header) {
+                obj[header] = row[index] || '';
+            }
         });
         data.push(obj);
     }
 
     return data;
+}
+
+/** Helper to get value using multiple possible header names */
+function getValue(obj, keys) {
+    const foundKey = keys.find(k => obj.hasOwnProperty(k));
+    return foundKey ? obj[foundKey] : '';
 }
 
 /**
@@ -55,9 +63,9 @@ export async function fetchClients() {
     const clients = parseSheetData(rows);
 
     return clients.map(c => ({
-        name: c['Client Name'] || c['Client'] || '',
-        vertical: c['Vertical'] || '',
-        contact: c['Contact'] || ''
+        name: getValue(c, ['Client Name', 'Client']),
+        vertical: getValue(c, ['Vertical']),
+        contact: getValue(c, ['Contact'])
     })).filter(c => c.name);
 }
 
@@ -68,19 +76,21 @@ export async function fetchProjectsForClient(clientName) {
     const rows = await fetchSheetData(CENTRAL_SHEET_ID, 'Project_WorkOrder!A:Z');
     const projects = parseSheetData(rows);
 
+    const targetClient = (clientName || '').trim();
+
     return projects
-        .filter(p => p['Client Name'] === clientName)
+        .filter(p => (getValue(p, ['Client Name', 'Client']) || '').trim() === targetClient)
         .map(p => ({
-            client: p['Client Name'] || '',
-            project: p['Project Name'] || '',
-            vertical: p['Vertical'] || '',
-            product: p['Product / Panel'] || '',
-            masterQty: parseFloat(p['Master Qty']) || 0,
-            deliveryDate: p['Delivery Date'] || '',
-            printMedia: p['Print Media'] || '',
-            lamMedia: p['Lamination'] || '',
-            size: p['Size'] || '',
-            printerModel: p['Printer Model'] || ''
+            client: getValue(p, ['Client Name', 'Client']),
+            project: getValue(p, ['Project Name', 'Project']),
+            vertical: getValue(p, ['Vertical']),
+            product: getValue(p, ['Product / Panel', 'Product', 'Panel']),
+            masterQty: parseFloat(getValue(p, ['Master Qty', 'Quantity', 'Qty'])) || 0,
+            deliveryDate: getValue(p, ['Delivery Date', 'Due Date']),
+            printMedia: getValue(p, ['Print Media', 'Media']),
+            lamMedia: getValue(p, ['Lamination', 'Lamination Media', 'Lam Media']),
+            size: getValue(p, ['Size']),
+            printerModel: getValue(p, ['Printer Model', 'Printer'])
         }));
 }
 
@@ -92,16 +102,16 @@ export async function fetchAllProjects() {
     const projects = parseSheetData(rows);
 
     return projects.map(p => ({
-        client: p['Client Name'] || '',
-        project: p['Project Name'] || '',
-        vertical: p['Vertical'] || '',
-        product: p['Product / Panel'] || '',
-        masterQty: parseFloat(p['Master Qty']) || 0,
-        deliveryDate: p['Delivery Date'] || '',
-        printMedia: p['Print Media'] || '',
-        lamMedia: p['Lamination'] || '',
-        size: p['Size'] || '',
-        printerModel: p['Printer Model'] || ''
+        client: getValue(p, ['Client Name', 'Client']),
+        project: getValue(p, ['Project Name', 'Project']),
+        vertical: getValue(p, ['Vertical']),
+        product: getValue(p, ['Product / Panel', 'Product', 'Panel']),
+        masterQty: parseFloat(getValue(p, ['Master Qty', 'Quantity', 'Qty'])) || 0,
+        deliveryDate: getValue(p, ['Delivery Date', 'Due Date']),
+        printMedia: getValue(p, ['Print Media', 'Media']),
+        lamMedia: getValue(p, ['Lamination', 'Lamination Media', 'Lam Media']),
+        size: getValue(p, ['Size']),
+        printerModel: getValue(p, ['Printer Model', 'Printer'])
     })).filter(p => p.client && p.project);
 }
 

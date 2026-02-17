@@ -190,7 +190,7 @@ export default function ProductionEntry({ clients, mediaOptions, onSaved, showTo
                     master_qty: parseFloat(item.masterQty) || 0,
                     batch_qty: parseFloat(item.batchQty) || 0,
                     design_rej: parseFloat(item.designRej) || 0,
-                    print_rej: parseFloat(item.print_rej) || 0,
+                    print_rej: parseFloat(item.printRej) || 0,
                     lam_rej: parseFloat(item.lamRej) || 0,
                     cut_rej: parseFloat(item.cutRej) || 0,
                     pack_rej: parseFloat(item.packRej) || 0,
