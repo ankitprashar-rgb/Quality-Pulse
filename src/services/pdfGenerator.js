@@ -47,34 +47,35 @@ export async function generateQualityReport(entry, lineItems) {
     }
 
     // --- Header ---
-    const topMargin = 20;
+    const topMargin = 15;
+    const leftMargin = 20;
+    const contentWidth = pageWidth - (leftMargin * 2);
 
-    // Logo (Top Right)
+    // Logo (Top Left)
     if (logoData) {
-        // Fix width to 17mm (1/3rd of previous), calculate height based on ratio
         const logoW = 17;
         const logoH = logoW / logoRatio;
-        doc.addImage(logoData, 'PNG', pageWidth - 20 - logoW, topMargin - 5, logoW, logoH);
+        doc.addImage(logoData, 'PNG', leftMargin, topMargin, logoW, logoH);
     } else {
-        doc.setFontSize(22);
+        doc.setFontSize(14);
         doc.setTextColor(BRAND_BLACK);
-        doc.text("IDE Autoworks", pageWidth - 20, topMargin + 5, { align: 'right' });
+        doc.text("IDE Autoworks", leftMargin, topMargin + 5);
     }
 
-    // Title (Top Left)
+    // Title (Below Logo)
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(24);
+    doc.setFontSize(22);
     setBlack();
-    doc.text("Quality Assurance Report", 20, topMargin + 5);
+    doc.text("Quality Assurance Report", leftMargin, topMargin + 22);
 
     // Meta Data Grid (Below Title)
     doc.setFont("helvetica", "normal");
     doc.setFontSize(9);
     setGrey();
 
-    const metaY = topMargin + 20;
+    const metaY = topMargin + 32;
     const col1 = 20;
-    const col2 = 80;
+    const col2 = 70;
 
     doc.text("REPORT DATE", col1, metaY);
     doc.text("CLIENT", col1, metaY + 8);
