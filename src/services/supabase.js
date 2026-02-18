@@ -38,6 +38,44 @@ export async function fetchRejectionLogs(filters = {}) {
 }
 
 /**
+ * Fetch master data options (Print Media, Lamination, Printer)
+ */
+export async function fetchMasters() {
+    // Fetch ALL masters to avoid missing categories due to strict filtering
+    const { data, error } = await supabase
+        .from('masters')
+        .select('*')
+        .order('name');
+
+    if (error) {
+        console.error('Error fetching masters:', error);
+        return { printMedia: [], lamMedia: [], printers: [] };
+    }
+
+    const masters = {
+        printMedia: [],
+        lamMedia: [],
+        printers: []
+    };
+
+    const categoriesFound = new Set();
+
+    data.forEach(item => {
+        const cat = (item.category || '').toLowerCase().trim();
+        categoriesFound.add(cat);
+
+        if (cat === 'print media' || cat === 'media') masters.printMedia.push(item.name);
+        else if (cat === 'lamination' || cat === 'lam') masters.lamMedia.push(item.name);
+        else if (cat === 'printer' || cat === 'printer model') masters.printers.push(item.name);
+    });
+
+    console.log('Supabase Masters Categories Found:', [...categoriesFound]);
+    console.log('Parsed Masters:', masters);
+
+    return masters;
+}
+
+/**
  * Save new rejection entry
  */
 export async function saveRejectionEntry(entry) {

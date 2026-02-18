@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { saveRejectionEntry } from '../services/supabase';
+import { saveRejectionEntry, fetchMasters } from '../services/supabase';
 import { fetchProjectsForClient, appendRejectionToSheet } from '../services/googleSheets';
 import { uploadFile } from '../services/googleDrive';
 import { getTodayDate, calculateRejectionRate, strictTruncate } from '../utils/helpers';
@@ -14,6 +14,47 @@ export default function ProductionEntry({ clients, mediaOptions, onSaved, showTo
     const [projects, setProjects] = useState([]);
     const [lineItems, setLineItems] = useState([]);
     const [loading, setLoading] = useState(false);
+
+    const [supabaseMasters, setSupabaseMasters] = useState({ printMedia: [], lamMedia: [], printers: [] });
+    const [mergedOptions, setMergedOptions] = useState({ printMedia: [], lamMedia: [], printers: [] });
+
+    // Fetch Supabase masters on mount
+    useEffect(() => {
+        async function load() {
+            const data = await fetchMasters();
+            setSupabaseMasters(data);
+        }
+        load();
+    }, []);
+
+    // Merge and Sort (Sticky) Options
+    useEffect(() => {
+        function getStickyList(sheetArr, dbArr, storageKey) {
+            const combined = [...new Set([...(sheetArr || []), ...(dbArr || [])])].filter(Boolean).sort();
+            const lastUsed = localStorage.getItem(storageKey);
+
+            if (lastUsed && combined.includes(lastUsed)) {
+                return [lastUsed, ...combined.filter(i => i !== lastUsed)];
+            }
+            return combined;
+        }
+
+        const sheetOps = mediaOptions || { printMedia: [], lamMedia: [], printers: [] };
+
+        const newOptions = {
+            printMedia: getStickyList(sheetOps.printMedia, supabaseMasters.printMedia, 'last_used_print_media'),
+            lamMedia: getStickyList(sheetOps.lamMedia, supabaseMasters.lamMedia, 'last_used_lam_media'),
+            printers: getStickyList(sheetOps.printers, supabaseMasters.printers, 'last_used_printer')
+        };
+
+        console.log('Merged Options:', newOptions);
+        setMergedOptions(newOptions);
+    }, [mediaOptions, supabaseMasters, printerModel, lineItems]); // Re-calc when deps change or when selection changes (to update sticky)
+
+    // Helper to update sticky pref on selection
+    const recordSelection = (key, value) => {
+        if (value) localStorage.setItem(key, value);
+    };
 
     // Handle pre-fill data from Pending Production
     useEffect(() => {
@@ -96,6 +137,9 @@ export default function ProductionEntry({ clients, mediaOptions, onSaved, showTo
     }
 
     function updateLineItem(id, field, value) {
+        if (field === 'printMedia') recordSelection('last_used_print_media', value);
+        if (field === 'lamMedia') recordSelection('last_used_lam_media', value);
+
         setLineItems(items => items.map(item => {
             if (item.id === id) {
                 if (field.startsWith('image_')) {
@@ -327,18 +371,14 @@ export default function ProductionEntry({ clients, mediaOptions, onSaved, showTo
                         <label>Printer Model</label>
                         <input
                             type="text"
-                            list="printer-list"
+                            list="master-printer-list"
                             value={printerModel}
-                            onChange={(e) => setPrinterModel(e.target.value)}
+                            onChange={(e) => {
+                                setPrinterModel(e.target.value);
+                                recordSelection('last_used_printer', e.target.value);
+                            }}
                             placeholder="Select Printer"
                         />
-                        {mediaOptions && (
-                            <datalist id="printer-list">
-                                {mediaOptions.printers.map((p, idx) => (
-                                    <option key={idx} value={p} />
-                                ))}
-                            </datalist>
-                        )}
                     </div>
                 </div>
 
@@ -373,12 +413,23 @@ export default function ProductionEntry({ clients, mediaOptions, onSaved, showTo
                         {loading ? 'Saving...' : 'Save Entry'}
                     </button>
                 </div>
+
+                {/* Global Datalists for Sticky Selection */}
+                <datalist id="master-print-media-list">
+                    {mergedOptions.printMedia.map((m, idx) => <option key={idx} value={m} />)}
+                </datalist>
+                <datalist id="master-lam-media-list">
+                    {mergedOptions.lamMedia.map((m, idx) => <option key={idx} value={m} />)}
+                </datalist>
+                <datalist id="master-printer-list">
+                    {mergedOptions.printers.map((m, idx) => <option key={idx} value={m} />)}
+                </datalist>
             </div>
         </section>
     );
 }
 
-function LineItemCard({ item, index, metrics, mediaOptions, onUpdate, onRemove }) {
+function LineItemCard({ item, index, metrics, onUpdate, onRemove }) {
     return (
         <div className="line-item-card">
             <div className="line-item-header">
@@ -401,34 +452,20 @@ function LineItemCard({ item, index, metrics, mediaOptions, onUpdate, onRemove }
                     <label>Print Media</label>
                     <input
                         type="text"
-                        list="print-media-list"
+                        list="master-print-media-list"
                         value={item.printMedia}
                         onChange={(e) => onUpdate(item.id, 'printMedia', e.target.value)}
                     />
-                    {mediaOptions && (
-                        <datalist id="print-media-list">
-                            {mediaOptions.printMedia.map((m, idx) => (
-                                <option key={idx} value={m} />
-                            ))}
-                        </datalist>
-                    )}
                 </div>
 
                 <div className="form-field">
                     <label>Lamination</label>
                     <input
                         type="text"
-                        list="lam-media-list"
+                        list="master-lam-media-list"
                         value={item.lamMedia}
                         onChange={(e) => onUpdate(item.id, 'lamMedia', e.target.value)}
                     />
-                    {mediaOptions && (
-                        <datalist id="lam-media-list">
-                            {mediaOptions.lamMedia.map((m, idx) => (
-                                <option key={idx} value={m} />
-                            ))}
-                        </datalist>
-                    )}
                 </div>
 
                 <div className="form-field">
