@@ -108,7 +108,7 @@ export async function generateQualityReport(entry, lineItems) {
     // Draw Box
     doc.setDrawColor(229, 231, 235); // Light grey border
     doc.setFillColor(252, 252, 252); // Very light grey bg
-    doc.roundedRect(20, summaryY, pageWidth - 40, boxHeight, 3, 3, 'FD');
+    doc.roundedRect(leftMargin, summaryY, contentWidth, boxHeight, 3, 3, 'FD');
 
     // Box Content
     const kpiY = summaryY + 8;
@@ -131,14 +131,14 @@ export async function generateQualityReport(entry, lineItems) {
         doc.text(value, x, valY);
     };
 
-    drawKpi("TOTAL ITEMS", totalItems.toString(), 35);
-    drawKpi("PASSED", passedItems.toFixed(0), 85, 'good');
-    drawKpi("REJECTED", totalRejections.toFixed(0), 135, 'bad');
+    drawKpi("TOTAL ITEMS", totalItems.toString(), leftMargin + 10);
+    drawKpi("PASSED", passedItems.toFixed(0), leftMargin + 55, 'good');
+    drawKpi("REJECTED", totalRejections.toFixed(0), leftMargin + 100, 'bad');
 
     // Quality Score (Custom Logic for coloring/position)
     doc.setFontSize(8);
     setGrey();
-    const scoreX = 160; // Moved left to fit 94.5%
+    const scoreX = leftMargin + 145; // Aligned with the card width
     doc.text("QUALITY SCORE", scoreX, kpiY);
     doc.setFontSize(14);
 
@@ -181,9 +181,11 @@ export async function generateQualityReport(entry, lineItems) {
 
     autoTable(doc, {
         startY: tableY,
+        margin: { left: leftMargin, right: leftMargin }, // Consistent with Summary Card
         head: [['Item / Product', 'Media Configuration', 'Printer']], // Adjusted columns
         body: tableBody,
         theme: 'plain',
+        tableWidth: contentWidth, // Explicit width
         styles: {
             font: 'helvetica',
             fontSize: 10,
@@ -198,8 +200,8 @@ export async function generateQualityReport(entry, lineItems) {
             textTransform: 'uppercase'
         },
         columnStyles: {
-            0: { cellWidth: 80 },
-            1: { cellWidth: 70 },
+            0: { cellWidth: 75 },
+            1: { cellWidth: 65 },
             2: { cellWidth: 'auto' }
         },
         // Hook to draw the "KPI Cards" in the 2nd row of each pair
