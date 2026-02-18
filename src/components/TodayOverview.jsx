@@ -131,6 +131,7 @@ export default function TodayOverview() {
         const data = [{
             'Date': row.date, 'Client': row.client_name, 'Project': row.project_name,
             'Vertical': row.vertical, 'Product': row.product,
+            'Print Media': row.print_media, 'Lamination': row.lamination,
             'Master Qty': row.master_qty, 'Batch Qty': row.batch_qty,
             'Delivered': row.qty_delivered, 'Rejected': row.qty_rejected,
             'Rejection %': row.rejection_percent,
@@ -142,6 +143,57 @@ export default function TodayOverview() {
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, 'Entry');
         XLSX.writeFile(wb, `QP_${row.client_name}_${row.project_name}.xlsx`);
+    }
+
+    // Temporary Recovery Function
+    async function recoverData() {
+        if (!confirm('Run data recovery to backfill missing Lamination/Print Media from Master Sheet?')) return;
+        setLoading(true);
+        try {
+            console.log('Starting recovery...');
+            const { fetchAllProjects } = await import('../services/googleSheets');
+            const { supabase } = await import('../lib/supabase'); // Direct access for custom query
+
+            // 1. Fetch all assignments from Sheet
+            const allProjects = await fetchAllProjects();
+            console.log('Fetched projects from sheet:', allProjects.length);
+
+            // 2. Fetch all rejection logs that might need update
+            // We fetch ALL for simplicity, or filter where lamination is null if possible via Supabase filter
+            const { data: logs, error } = await supabase.from('rejection_log').select('*');
+            if (error) throw error;
+            console.log('Fetched logs from DB:', logs.length);
+
+            let updated = 0;
+            for (const log of logs) {
+                if (log.lamination && log.print_media) continue; // Skip if complete
+
+                // Find match
+                const match = allProjects.find(p =>
+                    (p.client || '').trim() === (log.client_name || '').trim() &&
+                    (p.project || '').trim() === (log.project_name || '').trim() &&
+                    (p.product || '').trim() === (log.product || '').trim()
+                );
+
+                if (match) {
+                    const updates = {};
+                    if (!log.lamination && match.lamMedia) updates.lamination = match.lamMedia;
+                    if (!log.print_media && match.printMedia) updates.print_media = match.printMedia;
+
+                    if (Object.keys(updates).length > 0) {
+                        await updateRejectionEntry(log.id, { ...log, ...updates });
+                        updated++;
+                    }
+                }
+            }
+            alert(`Recovery complete! Updated ${updated} entries.`);
+            window.location.reload();
+        } catch (e) {
+            console.error(e);
+            alert('Recovery failed: ' + e.message);
+        } finally {
+            setLoading(false);
+        }
     }
 
     if (loading) return <div className="card"><div className="card-body">Loading...</div></div>;
@@ -160,6 +212,7 @@ export default function TodayOverview() {
                         {projects.length > 0
                             ? `${consolidated.length} projects from ${projects.length} entries — click to expand`
                             : 'Click a row to expand details'}
+                        <button onClick={recoverData} style={{ marginLeft: '20px', fontSize: '10px', opacity: 0.5 }}>Run Data Recovery</button>
                     </div>
                 </div>
                 {projects.length > 0 && (
@@ -239,6 +292,10 @@ export default function TodayOverview() {
                                                                             <>
                                                                                 <div className="entry-info">
                                                                                     <span className="ei-product">{row.product || 'No product'}</span>
+                                                                                    <span className="ei-sep">·</span>
+                                                                                    <span className="ei-media" title={row.print_media}>Print: {(row.print_media && row.print_media.length > 20) ? row.print_media.substring(0, 20) + '...' : (row.print_media || '-')}</span>
+                                                                                    <span className="ei-sep">·</span>
+                                                                                    <span className="ei-media" title={row.lamination}>Lam: {(row.lamination && row.lamination.length > 20) ? row.lamination.substring(0, 20) + '...' : (row.lamination || '-')}</span>
                                                                                     <span className="ei-sep">·</span>
                                                                                     <span className="ei-batch">Batch: {formatNum(row.batch_qty)}</span>
                                                                                     <span className="ei-sep">·</span>
