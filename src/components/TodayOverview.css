@@ -215,6 +215,39 @@
     transform: scale(1.08);
 }
 
+/* Tooltip */
+.icon-btn {
+    position: relative;
+}
+
+.icon-btn::after {
+    content: attr(title);
+    /* Use the title attribute as tooltip content */
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%) translateY(-5px);
+    background: #111827;
+    color: #fff;
+    padding: 4px 8px;
+    font-size: 10px;
+    border-radius: 4px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+    z-index: 10;
+    font-weight: 500;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.icon-btn:hover::after {
+    opacity: 1;
+}
+
+/* Hide default browser tooltip if possible (hard with title attr, but this layers over it usually) */
+/* Ideally we switch to data-title to avoid double tooltip */
+
 .icon-btn.edit {
     border-color: #d1d5db;
 }

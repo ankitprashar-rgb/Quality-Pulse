@@ -44,8 +44,12 @@ export async function generateQualityReport(entry, lineItems) {
 
     // Logo (Top Right)
     if (logoData) {
-        const logoW = 40;
-        const logoH = 10; // Aspect ratio approximation
+        // Maintain aspect ratio. The logo is likely wider. 
+        // Let's assume a max width of 50 and dynamic height, or fixed height.
+        // Better: 50mm width, auto height based on ratio? jsPDF doesn't do auto.
+        // Let's try 50x8 which is ~6:1, closer to typical logos.
+        const logoW = 50;
+        const logoH = 8;
         doc.addImage(logoData, 'PNG', pageWidth - 20 - logoW, topMargin - 5, logoW, logoH);
     } else {
         doc.setFontSize(22);
@@ -183,8 +187,8 @@ export async function generateQualityReport(entry, lineItems) {
             lineWidth: { bottom: 0.5 }
         },
         headStyles: {
-            fillColor: [17, 24, 39], // Black header
-            textColor: [212, 222, 71], // #d4de47 Highlight text
+            fillColor: [212, 222, 71], // #d4de47 Neon Green Header
+            textColor: [17, 24, 39],   // Black Text
             fontStyle: 'bold',
             textTransform: 'uppercase'
         },
