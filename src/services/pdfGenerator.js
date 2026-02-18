@@ -194,8 +194,8 @@ export async function generateQualityReport(entry, lineItems) {
             lineWidth: { bottom: 0.5 }
         },
         headStyles: {
-            fillColor: [17, 24, 39], // Black Header
-            textColor: [212, 222, 71], // #d4de47 Neon Green Text
+            fillColor: [212, 222, 71], // #d4de47 Neon Green Header
+            textColor: [17, 24, 39],   // Black Text
             fontStyle: 'bold',
             textTransform: 'uppercase'
         },
