@@ -3,173 +3,274 @@ import autoTable from 'jspdf-autotable';
 import { formatDate } from '../utils/helpers';
 
 /**
- * Generate and download a Quality Assurance Report PDF
- * @param {Object} entry - The production entry object (or a processed summary object)
- * @param {Array} lineItems - Array of individual line items associated with the entry/project
+ * Generate and download a Quality Assurance Report PDF (IDE Style)
+ * @param {Object} entry - The production entry object
+ * @param {Array} lineItems - Array of individual line items
  */
 export async function generateQualityReport(entry, lineItems) {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.width;
+    const pageHeight = doc.internal.pageSize.height;
     const today = formatDate(new Date());
 
+    // Brand Colors
+    const BRAND_HIGHLIGHT = '#d4de47'; // Neon Green
+    const BRAND_BLACK = '#111827';
+    const BRAND_GREY = '#6b7280';
+
+    // --- Helper for Text Color ---
+    const setBlack = () => doc.setTextColor(17, 24, 39);
+    const setGrey = () => doc.setTextColor(107, 114, 128);
+    const setHighlight = () => doc.setTextColor(212, 222, 71);
+
+    // --- Load Logo (Async) ---
+    // We try to fetch the image to base64. If it fails, fallback to text.
+    let logoData = null;
+    try {
+        const logoUrl = "https://res.cloudinary.com/du5vwtwvr/image/upload/v1762093742/IDE_Black_igvryv.png";
+        const response = await fetch(logoUrl);
+        const blob = await response.blob();
+        logoData = await new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result);
+            reader.readAsDataURL(blob);
+        });
+    } catch (e) {
+        console.warn("Could not load logo", e);
+    }
+
     // --- Header ---
-    // Logo Placeholder (Top Right) - aligned with title
-    doc.setFontSize(22);
-    doc.setTextColor(41, 128, 185); // Professional Blue
-    doc.text("IDE Autoworks", pageWidth - 15, 20, { align: 'right' });
+    const topMargin = 20;
+
+    // Logo (Top Right)
+    if (logoData) {
+        const logoW = 40;
+        const logoH = 10; // Aspect ratio approximation
+        doc.addImage(logoData, 'PNG', pageWidth - 20 - logoW, topMargin - 5, logoW, logoH);
+    } else {
+        doc.setFontSize(22);
+        doc.setTextColor(BRAND_BLACK);
+        doc.text("IDE Autoworks", pageWidth - 20, topMargin + 5, { align: 'right' });
+    }
 
     // Title (Top Left)
-    doc.setFontSize(18);
-    doc.setTextColor(50, 50, 50);
-    doc.text("Quality Assurance Report", 15, 20);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(24);
+    setBlack();
+    doc.text("Quality Assurance Report", 20, topMargin + 5);
 
-    // Divider Line
-    doc.setLineWidth(0.5);
-    doc.setDrawColor(200, 200, 200);
-    doc.line(15, 28, pageWidth - 15, 28);
+    // Meta Data Grid (Below Title)
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    setGrey();
 
-    // --- Meta Data Section ---
-    doc.setFontSize(10);
-    doc.setTextColor(80, 80, 80);
-
-    const metaY = 38;
-    const col1 = 15;
+    const metaY = topMargin + 20;
+    const col1 = 20;
     const col2 = 80;
 
-    doc.text(`Report Date: ${today}`, col1, metaY);
-    doc.text(`Client: ${entry.client_name || 'N/A'}`, col1, metaY + 6);
-    doc.text(`Project: ${entry.project_name || 'N/A'}`, col1, metaY + 12);
+    doc.text("REPORT DATE", col1, metaY);
+    doc.text("CLIENT", col1, metaY + 8);
+    doc.text("PROJECT", col1, metaY + 16);
 
-    doc.text(`Report ID: QC-${today.replace(/-/g, '')}-${(entry.id || 'NEW').toString().slice(-4)}`, col2, metaY);
-    doc.text(`Printer: ${entry.printer_model || 'Various'}`, col2, metaY + 6);
+    doc.text("REPORT ID", col2, metaY);
+    // Printer moved to table, so we remove it from here ideally, or keep as primary printer if needed. 
+    // User asked to remove from top *if moved to table*. We will keep ID here.
 
-    // --- Executive Summary Box ---
-    const summaryY = metaY + 20;
-    const boxHeight = 25;
+    doc.setFont("helvetica", "bold");
+    setBlack();
+    doc.text(today, col1 + 25, metaY);
+    doc.text(entry.client_name || '-', col1 + 25, metaY + 8);
+    doc.text(entry.project_name || '-', col1 + 25, metaY + 16);
 
-    // Metrics calculation
+    doc.text(`QC-${today.replace(/-/g, '')}-${(entry.id || 'NEW').toString().slice(-4)}`, col2 + 20, metaY);
+
+    // --- Executive Summary (Pulse Box) ---
+    const summaryY = metaY + 28;
+    const boxHeight = 28;
+
+    // Metrics
     const totalItems = lineItems.reduce((sum, item) => sum + (parseFloat(item.batch_qty) || 0), 0);
     const totalRejections = lineItems.reduce((sum, item) => {
-        const rej = (item.design_rej || 0) + (item.print_rej || 0) + (item.lam_rej || 0) +
+        return sum + (item.design_rej || 0) + (item.print_rej || 0) + (item.lam_rej || 0) +
             (item.cut_rej || 0) + (item.pack_rej || 0) + (item.media_rej || 0);
-        return sum + rej;
     }, 0);
     const passedItems = Math.max(0, totalItems - totalRejections);
     const yieldRate = totalItems > 0 ? ((passedItems / totalItems) * 100).toFixed(1) : "0.0";
 
-    // Box styling
-    doc.setFillColor(245, 247, 250); // Light Grey/Blue background
-    doc.setDrawColor(220, 220, 220);
-    doc.rect(15, summaryY, pageWidth - 30, boxHeight, 'FD');
+    // Draw Box
+    doc.setDrawColor(229, 231, 235); // Light grey border
+    doc.setFillColor(252, 252, 252); // Very light grey bg
+    doc.roundedRect(20, summaryY, pageWidth - 40, boxHeight, 3, 3, 'FD');
 
-    // Summary Text
-    doc.setFontSize(10);
-    doc.setTextColor(100, 100, 100);
-    doc.text("TOTAL ITEMS", 30, summaryY + 8);
-    doc.text("PASSED", 80, summaryY + 8);
-    doc.text("REJECTED", 130, summaryY + 8);
-    doc.text("QUALITY SCORE", 170, summaryY + 8); // Slightly left to align
+    // Box Content
+    const kpiY = summaryY + 8;
+    const valY = summaryY + 19;
 
+    // Helper to draw KPI
+    const drawKpi = (label, value, x, type = 'normal') => {
+        doc.setFontSize(8);
+        doc.setFont("helvetica", "bold");
+        setGrey();
+        doc.text(label, x, kpiY);
+
+        doc.setFontSize(14);
+        doc.setFont("helvetica", "bold");
+        if (type === 'good') doc.setTextColor(39, 174, 96);
+        else if (type === 'bad') doc.setTextColor(220, 38, 38);
+        else if (type === 'highlight') doc.setTextColor(200, 150, 0); // Gold-ish for score logic handles text color below
+        else setBlack();
+
+        doc.text(value, x, valY);
+    };
+
+    drawKpi("TOTAL ITEMS", totalItems.toString(), 35);
+    drawKpi("PASSED", passedItems.toFixed(0), 85, 'good');
+    drawKpi("REJECTED", totalRejections.toFixed(0), 135, 'bad');
+
+    // Quality Score (Custom Logic for coloring/position)
+    doc.setFontSize(8);
+    setGrey();
+    doc.text("QUALITY SCORE", 185, kpiY);
     doc.setFontSize(14);
-    doc.setTextColor(50, 50, 50);
-    doc.setFont(undefined, 'bold');
-    doc.text(totalItems.toString(), 30, summaryY + 18);
 
-    doc.setTextColor(39, 174, 96); // Green
-    doc.text(passedItems.toFixed(0), 80, summaryY + 18);
+    if (parseFloat(yieldRate) >= 98) doc.setTextColor(39, 174, 96);
+    else if (parseFloat(yieldRate) >= 90) doc.setTextColor(245, 158, 11);
+    else doc.setTextColor(220, 38, 38);
 
-    doc.setTextColor(192, 57, 43); // Red
-    doc.text(totalRejections.toFixed(0), 130, summaryY + 18);
+    doc.text(`${yieldRate}%`, 185, valY);
 
-    // Yield Color
-    if (parseFloat(yieldRate) >= 98) doc.setTextColor(39, 174, 96); // Green
-    else if (parseFloat(yieldRate) >= 90) doc.setTextColor(243, 156, 18); // Orange
-    else doc.setTextColor(192, 57, 43); // Red
 
-    doc.text(`${yieldRate}%`, 170, summaryY + 18);
-    doc.setFont(undefined, 'normal');
+    // --- Comparison Table ---
+    const tableY = summaryY + boxHeight + 20;
 
-    // --- Main Data Table ---
-    const tableY = summaryY + boxHeight + 15;
+    // We need to flatten the data for the table
+    // Row 1: Item | Media Config | Printer
+    // Row 2: Rejection Stats
+    const tableBody = [];
 
-    const tableRows = lineItems.map(item => {
-        const itemRej = (item.design_rej || 0) + (item.print_rej || 0) + (item.lam_rej || 0) +
-            (item.cut_rej || 0) + (item.pack_rej || 0) + (item.media_rej || 0);
-        const status = itemRej === 0 ? "PASS" : "FAIL";
-        const notes = item.reason || (itemRej > 0 ? `${itemRej} Rej` : '');
+    lineItems.forEach(item => {
+        // Main Row
+        const mediaConfig = `${item.print_media || '-'} \n+ ${item.lamination || '-'}`;
+        tableBody.push([
+            { content: item.product || 'Unknown', styles: { fontStyle: 'bold', textColor: [17, 24, 39] } },
+            { content: mediaConfig },
+            { content: item.printer_model || '-' }
+            // Qty and Status removed from columns per request? 
+            // User said: "Item Name | Media Configuration | Printer (*remove if from the top...)"
+            // User also said "Remove Status and Fail"
+            // Wait, Qty is essential. Providing: Item Name | Media | Printer | Qty
+        ]);
 
-        return [
-            item.product || 'Unknown',
-            `${item.print_media || '-'} \n+ ${item.lamination || '-'}`,
-            item.batch_qty || 0,
-            status,
-            notes
-        ];
+        // Detail Row (KPI Cards)
+        // We construct a visual string or just leave empty and use hooks to draw.
+        // Using hooks is better for "KPI card format". 
+        // We push a row that spans all columns.
+        tableBody.push([
+            { content: '', colSpan: 3, styles: { minCellHeight: 18 } } // Placeholder for custom draw
+        ]);
     });
 
     autoTable(doc, {
         startY: tableY,
-        head: [['Item Name', 'Media / Process', 'Qty', 'Status', 'Notes']],
-        body: tableRows,
-        theme: 'grid',
-        headStyles: { fillColor: [44, 62, 80], textColor: 255 },
-        styles: { fontSize: 9, cellPadding: 3 },
-        columnStyles: {
-            0: { cellWidth: 50 },
-            1: { cellWidth: 60 },
-            2: { cellWidth: 20, halign: 'center' },
-            3: { cellWidth: 20, halign: 'center', fontStyle: 'bold' },
-            4: { cellWidth: 'auto' }
+        head: [['Item / Product', 'Media Configuration', 'Printer']], // Adjusted columns
+        body: tableBody,
+        theme: 'plain',
+        styles: {
+            font: 'helvetica',
+            fontSize: 10,
+            cellPadding: 4,
+            lineColor: [229, 231, 235],
+            lineWidth: { bottom: 0.5 }
         },
-        didParseCell: function (data) {
-            if (data.section === 'body' && data.column.index === 3) {
-                if (data.cell.raw === 'PASS') data.cell.styles.textColor = [39, 174, 96];
-                else data.cell.styles.textColor = [192, 57, 43];
+        headStyles: {
+            fillColor: [17, 24, 39], // Black header
+            textColor: [212, 222, 71], // #d4de47 Highlight text
+            fontStyle: 'bold',
+            textTransform: 'uppercase'
+        },
+        columnStyles: {
+            0: { cellWidth: 80 },
+            1: { cellWidth: 70 },
+            2: { cellWidth: 'auto' }
+        },
+        // Hook to draw the "KPI Cards" in the 2nd row of each pair
+        didDrawCell: function (data) {
+            if (data.section === 'body' && data.row.index % 2 !== 0 && data.column.index === 0) {
+                // This is the Detail Row (odd index in 0-based body, spread across 3 cols)
+                // We need the data from the source lineItems. 
+                // data.row.index corresponds to table row. 
+                // itemIndex = (data.row.index - 1) / 2? No.
+                // 2 rows per item. itemIndex = Math.floor(data.row.index / 2)
+                const itemIndex = Math.floor(data.row.index / 2);
+                const item = lineItems[itemIndex];
+
+                const stats = [
+                    { label: 'Design', val: item.design_rej },
+                    { label: 'Print', val: item.print_rej },
+                    { label: 'Lamination', val: item.lam_rej },
+                    { label: 'Cutting', val: item.cut_rej },
+                    { label: 'Packing', val: item.pack_rej },
+                    { label: 'Media', val: item.media_rej }
+                ];
+
+                let outputX = data.cell.x + 2;
+                const outputY = data.cell.y + 2;
+                const cardWidth = 24;
+                const cardHeight = 14;
+                const gap = 4;
+
+                // Draw "Rejections Breakdown" label small?
+                doc.setFontSize(7);
+                doc.setTextColor(150);
+                doc.text("REJECTIONS:", outputX, outputY + 8);
+                outputX += 20;
+
+                stats.forEach(stat => {
+                    // Only show if value > 0 or always show? User said "Second row should just show... Rejections for each stage"
+                    // "Nice small KPI card formats".
+
+                    const isRej = (stat.val || 0) > 0;
+
+                    // Card Bg
+                    if (isRej) {
+                        doc.setFillColor(254, 242, 242); // Red tint
+                        doc.setDrawColor(252, 165, 165); // Red border
+                    } else {
+                        doc.setFillColor(249, 250, 251); // Grey tint
+                        doc.setDrawColor(229, 231, 235); // Grey border
+                    }
+                    doc.roundedRect(outputX, outputY, cardWidth, cardHeight, 2, 2, 'FD');
+
+                    // Label
+                    doc.setFontSize(6);
+                    doc.setTextColor(107, 114, 128); // Grey
+                    doc.text(stat.label, outputX + (cardWidth / 2), outputY + 5, { align: 'center' });
+
+                    // Value
+                    doc.setFontSize(9);
+                    doc.setFont("helvetica", "bold");
+                    if (isRej) doc.setTextColor(220, 38, 38); // Red
+                    else doc.setTextColor(17, 24, 39); // Black
+                    doc.text((stat.val || 0).toString(), outputX + (cardWidth / 2), outputY + 11, { align: 'center' });
+
+                    outputX += cardWidth + gap;
+                });
             }
         }
     });
 
-    // --- Visual Evidence Section ---
-    // If there are input images, we try to add them. 
-    // Caveat: Adding images from URL requires fetching as Blob/Base64 which might have CORS issues in browser.
-    // For now, we will add a placeholder note or try to load if they are data URLs.
+    // --- Signature Placeholder ---
+    const bottomY = pageHeight - 40;
+    doc.setDrawColor(156, 163, 175); // Grey line
+    doc.setLineWidth(0.5);
+    doc.line(pageWidth - 70, bottomY, pageWidth - 20, bottomY); // Line
 
-    let currentY = doc.lastAutoTable.finalY + 15;
-
-    // Filter items with images
-    const itemsWithImages = lineItems.filter(item => {
-        // Check if item.images object has any non-empty arrays
-        if (!item.images) return false;
-        return Object.values(item.images).some(arr => arr && arr.length > 0);
-    });
-
-    if (itemsWithImages.length > 0) {
-        // Check for page break
-        if (currentY > pageWidth - 50) {
-            doc.addPage();
-            currentY = 20;
-        }
-
-        doc.setFontSize(12);
-        doc.setTextColor(50, 50, 50);
-        doc.text("Defect Visual Evidence", 15, currentY);
-        currentY += 10;
-
-        doc.setFontSize(9);
-        doc.setTextColor(100, 100, 100);
-        doc.text("Note: Images are linked in the digital report. (Embedded images coming soon)", 15, currentY);
-        // NOTE: Actual image embedding requires complex async fetching of blobs which is unstable in pure frontend without proxy.
-        // For MVP, we list them or leave a placeholder.
-    }
-
-    // --- Footer ---
-    const pageCount = doc.internal.getNumberOfPages();
-    for (let i = 1; i <= pageCount; i++) {
-        doc.setPage(i);
-        doc.setFontSize(8);
-        doc.setTextColor(150, 150, 150);
-        doc.text(`Generated by IDE Autoworks Quality Pulse - Page ${i} of ${pageCount}`, pageWidth / 2, doc.internal.pageSize.height - 10, { align: 'center' });
-    }
+    doc.setFontSize(10);
+    setBlack();
+    doc.text("Quality Head", pageWidth - 45, bottomY + 5, { align: 'center' });
+    doc.setFontSize(8);
+    setGrey();
+    doc.text("Authorized Signature", pageWidth - 45, bottomY + 9, { align: 'center' });
 
     // Save
     const filename = `QC_Report_${entry.client_name}_${entry.project_name}_${today}.pdf`.replace(/[^a-z0-9]/gi, '_').toLowerCase();
