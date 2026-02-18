@@ -134,14 +134,15 @@ export async function generateQualityReport(entry, lineItems) {
     // Quality Score (Custom Logic for coloring/position)
     doc.setFontSize(8);
     setGrey();
-    doc.text("QUALITY SCORE", 185, kpiY);
+    const scoreX = 165; // Moved left
+    doc.text("QUALITY SCORE", scoreX, kpiY);
     doc.setFontSize(14);
 
     if (parseFloat(yieldRate) >= 98) doc.setTextColor(39, 174, 96);
     else if (parseFloat(yieldRate) >= 90) doc.setTextColor(245, 158, 11);
     else doc.setTextColor(220, 38, 38);
 
-    doc.text(`${yieldRate}%`, 185, valY);
+    doc.text(`${yieldRate}%`, scoreX, valY);
 
 
     // --- Comparison Table ---
