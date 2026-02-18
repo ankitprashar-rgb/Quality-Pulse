@@ -150,7 +150,9 @@ export default function ClientExplorer({ clients }) {
         const data = [{
             'Date': formatDate(row.date), 'Client': row.client_name, 'Project': row.project_name,
             'Vertical': row.vertical, 'Product': row.product,
+
             'Print Media': row.print_media, 'Lamination': row.lamination,
+            'Printer': row.printer_model, 'Size': row.size,
             'Master Qty': row.master_qty, 'Batch Qty': row.batch_qty,
             'Delivered': row.qty_delivered, 'Rejected': row.qty_rejected,
             'Rejection %': row.rejection_percent,
@@ -169,7 +171,9 @@ export default function ClientExplorer({ clients }) {
         const exportData = logs.map(r => ({
             'Date': formatDate(r.date), 'Client': r.client_name, 'Project': r.project_name,
             'Vertical': r.vertical, 'Product': r.product,
+
             'Print Media': r.print_media, 'Lamination': r.lamination,
+            'Printer': r.printer_model, 'Size': r.size,
             'Master Qty': r.master_qty, 'Batch Qty': r.batch_qty,
             'Qty Delivered': r.qty_delivered, 'Qty Rejected': r.qty_rejected,
             'Rejection %': r.rejection_percent,
@@ -311,9 +315,13 @@ export default function ClientExplorer({ clients }) {
                                                                                     <div className="entry-info">
                                                                                         <span className="ei-product">{row.product || 'No product'}</span>
                                                                                         <span className="ei-sep">·</span>
-                                                                                        <span className="ei-media" title={row.print_media}>Print: {(row.print_media && row.print_media.length > 15) ? row.print_media.substring(0, 15) + '...' : (row.print_media || '-')}</span>
+                                                                                        <span className="ei-media" title={row.print_media}>Print: {row.print_media || '-'}</span>
                                                                                         <span className="ei-sep">·</span>
-                                                                                        <span className="ei-media" title={row.lamination}>Lam: {(row.lamination && row.lamination.length > 15) ? row.lamination.substring(0, 15) + '...' : (row.lamination || '-')}</span>
+                                                                                        <span className="ei-media" title={row.lamination}>Lam: {row.lamination || '-'}</span>
+                                                                                        <span className="ei-sep">·</span>
+                                                                                        <span className="ei-media">Printer: {row.printer_model || '-'}</span>
+                                                                                        <span className="ei-sep">·</span>
+                                                                                        <span className="ei-media">Size: {row.size || '-'}</span>
                                                                                         <span className="ei-sep">·</span>
                                                                                         <span className="ei-batch">Batch: {formatNum(row.batch_qty)}</span>
                                                                                         <span className="ei-sep">·</span>

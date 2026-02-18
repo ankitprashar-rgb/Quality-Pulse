@@ -191,6 +191,7 @@ export default function ProductionEntry({ clients, mediaOptions, onSaved, showTo
                     client_name: clientName,
                     vertical: vertical,
                     project_name: projectName,
+                    printer_model: printerModel,
                     product: item.product,
                     print_media: item.printMedia,
                     lamination: item.lamMedia,

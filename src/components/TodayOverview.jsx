@@ -131,7 +131,9 @@ export default function TodayOverview() {
         const data = [{
             'Date': row.date, 'Client': row.client_name, 'Project': row.project_name,
             'Vertical': row.vertical, 'Product': row.product,
+
             'Print Media': row.print_media, 'Lamination': row.lamination,
+            'Printer': row.printer_model, 'Size': row.size,
             'Master Qty': row.master_qty, 'Batch Qty': row.batch_qty,
             'Delivered': row.qty_delivered, 'Rejected': row.qty_rejected,
             'Rejection %': row.rejection_percent,
@@ -293,9 +295,13 @@ export default function TodayOverview() {
                                                                                 <div className="entry-info">
                                                                                     <span className="ei-product">{row.product || 'No product'}</span>
                                                                                     <span className="ei-sep">·</span>
-                                                                                    <span className="ei-media" title={row.print_media}>Print: {(row.print_media && row.print_media.length > 20) ? row.print_media.substring(0, 20) + '...' : (row.print_media || '-')}</span>
+                                                                                    <span className="ei-media" title={row.print_media}>Print: {row.print_media || '-'}</span>
                                                                                     <span className="ei-sep">·</span>
-                                                                                    <span className="ei-media" title={row.lamination}>Lam: {(row.lamination && row.lamination.length > 20) ? row.lamination.substring(0, 20) + '...' : (row.lamination || '-')}</span>
+                                                                                    <span className="ei-media" title={row.lamination}>Lam: {row.lamination || '-'}</span>
+                                                                                    <span className="ei-sep">·</span>
+                                                                                    <span className="ei-media">Printer: {row.printer_model || '-'}</span>
+                                                                                    <span className="ei-sep">·</span>
+                                                                                    <span className="ei-media">Size: {row.size || '-'}</span>
                                                                                     <span className="ei-sep">·</span>
                                                                                     <span className="ei-batch">Batch: {formatNum(row.batch_qty)}</span>
                                                                                     <span className="ei-sep">·</span>

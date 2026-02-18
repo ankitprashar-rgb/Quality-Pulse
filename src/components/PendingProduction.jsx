@@ -26,7 +26,7 @@ export default function PendingProduction({ onSelectProject }) {
 
             const projectMap = new Map();
             projects.forEach(p => {
-                const key = `${p.client}|||${p.project}`;
+                const key = `${p.client.trim()}|||${p.project.trim()}`;
                 if (!projectMap.has(key)) {
                     projectMap.set(key, {
                         client: p.client, project: p.project,
