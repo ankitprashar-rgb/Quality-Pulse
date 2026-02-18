@@ -303,10 +303,10 @@ export default function ClientExplorer({ clients }) {
                                                                                         ))}
                                                                                     </div>
                                                                                     <div className="edit-actions">
-                                                                                        <button className="action-btn save" onClick={saveEdit} title="Save">
+                                                                                        <button className="action-btn save" onClick={saveEdit} aria-label="Save">
                                                                                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12" /></svg>
                                                                                         </button>
-                                                                                        <button className="action-btn cancel" onClick={cancelEdit} title="Cancel">
+                                                                                        <button className="action-btn cancel" onClick={cancelEdit} aria-label="Cancel">
                                                                                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
                                                                                         </button>
                                                                                     </div>

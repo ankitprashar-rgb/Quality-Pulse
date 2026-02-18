@@ -23,9 +23,10 @@ export async function generateQualityReport(entry, lineItems) {
     const setGrey = () => doc.setTextColor(107, 114, 128);
     const setHighlight = () => doc.setTextColor(212, 222, 71);
 
-    // --- Load Logo (Async) ---
+    // --- Load Logo (Async with Dimensions) ---
     // We try to fetch the image to base64. If it fails, fallback to text.
     let logoData = null;
+    let logoRatio = 4; // Default fallback (4:1)
     try {
         const logoUrl = "https://res.cloudinary.com/du5vwtwvr/image/upload/v1762093742/IDE_Black_igvryv.png";
         const response = await fetch(logoUrl);
@@ -35,6 +36,12 @@ export async function generateQualityReport(entry, lineItems) {
             reader.onloadend = () => resolve(reader.result);
             reader.readAsDataURL(blob);
         });
+
+        // Get dimensions
+        const img = new Image();
+        img.src = logoData;
+        await new Promise(resolve => img.onload = resolve);
+        if (img.height > 0) logoRatio = img.width / img.height;
     } catch (e) {
         console.warn("Could not load logo", e);
     }
@@ -44,12 +51,11 @@ export async function generateQualityReport(entry, lineItems) {
 
     // Logo (Top Right)
     if (logoData) {
-        // Maintain aspect ratio. The logo is likely wider. 
-        // Let's assume a max width of 50 and dynamic height, or fixed height.
-        // Better: 50mm width, auto height based on ratio? jsPDF doesn't do auto.
-        // Let's try 50x8 which is ~6:1, closer to typical logos.
+        // Fix width to 50mm, calculate height based on ratio
+        // If ratio is < 1 (tall), maybe constrain height instead? 
+        // Assuming horizontal logo > 1.
         const logoW = 50;
-        const logoH = 8;
+        const logoH = logoW / logoRatio;
         doc.addImage(logoData, 'PNG', pageWidth - 20 - logoW, topMargin - 5, logoW, logoH);
     } else {
         doc.setFontSize(22);
@@ -134,7 +140,7 @@ export async function generateQualityReport(entry, lineItems) {
     // Quality Score (Custom Logic for coloring/position)
     doc.setFontSize(8);
     setGrey();
-    const scoreX = 165; // Moved left
+    const scoreX = 160; // Moved left to fit 94.5%
     doc.text("QUALITY SCORE", scoreX, kpiY);
     doc.setFontSize(14);
 
@@ -188,8 +194,8 @@ export async function generateQualityReport(entry, lineItems) {
             lineWidth: { bottom: 0.5 }
         },
         headStyles: {
-            fillColor: [212, 222, 71], // #d4de47 Neon Green Header
-            textColor: [17, 24, 39],   // Black Text
+            fillColor: [17, 24, 39], // Black Header
+            textColor: [212, 222, 71], // #d4de47 Neon Green Text
             fontStyle: 'bold',
             textTransform: 'uppercase'
         },
