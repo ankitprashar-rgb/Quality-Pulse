@@ -68,12 +68,12 @@ export async function generateQualityReport(entry, lineItems) {
     setBlack();
     doc.text("Quality Assurance Report", leftMargin, topMargin + 22);
 
-    // Meta Data Grid (Below Title)
+    // Meta Data Grid (Below Divider)
     doc.setFont("helvetica", "normal");
     doc.setFontSize(9);
     setGrey();
 
-    const metaY = topMargin + 32;
+    const metaY = topMargin + 20;
     const col1 = 20;
     const col2 = 70;
 
@@ -271,18 +271,47 @@ export async function generateQualityReport(entry, lineItems) {
         }
     });
 
-    // --- Signature Placeholder ---
-    const bottomY = pageHeight - 40;
-    doc.setDrawColor(156, 163, 175); // Grey line
-    doc.setLineWidth(0.5);
-    doc.line(pageWidth - 70, bottomY, pageWidth - 20, bottomY); // Line
+    // --- Footer Section ---
+    const footerY = pageHeight - 15;
 
-    doc.setFontSize(10);
-    setBlack();
-    doc.text("Quality Head", pageWidth - 45, bottomY + 5, { align: 'center' });
-    doc.setFontSize(8);
-    setGrey();
-    doc.text("Authorized Signature", pageWidth - 45, bottomY + 9, { align: 'center' });
+    // Footer Divider Line
+    doc.setDrawColor(212, 222, 71); // Neon Green
+    doc.setLineWidth(0.3);
+    doc.line(leftMargin, footerY - 5, pageWidth - leftMargin, footerY - 5);
+
+    // Footer Text (Centered with colored pipes)
+    doc.setFontSize(7);
+    const part1 = "Focus Auto Designworks Pvt Ltd.";
+    const part2 = "Plot no. 192, Sector-27, Gurgaon-Haryana , 122002";
+    const part3 = "info@IDEautoworks.com";
+    const pipe = " | ";
+
+    const w1 = doc.getTextWidth(part1);
+    const wPipe = doc.getTextWidth(pipe);
+    const w2 = doc.getTextWidth(part2);
+    const w3 = doc.getTextWidth(part3);
+    const totalW = w1 + (wPipe * 2) + w2 + w3;
+
+    let currentX = (pageWidth - totalW) / 2;
+
+    doc.setTextColor(107, 114, 128); // Grey
+    doc.text(part1, currentX, footerY);
+    currentX += w1;
+
+    setHighlight(); // Neon Green for pipe
+    doc.text(pipe, currentX, footerY);
+    currentX += wPipe;
+
+    doc.setTextColor(107, 114, 128); // Grey
+    doc.text(part2, currentX, footerY);
+    currentX += w2;
+
+    setHighlight(); // Neon Green for pipe
+    doc.text(pipe, currentX, footerY);
+    currentX += wPipe;
+
+    doc.setTextColor(107, 114, 128); // Grey
+    doc.text(part3, currentX, footerY);
 
     // Save
     const filename = `QC_Report_${entry.client_name}_${entry.project_name}_${today}.pdf`.replace(/[^a-z0-9]/gi, '_').toLowerCase();
