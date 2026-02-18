@@ -49,7 +49,7 @@ export async function generateQualityReport(entry, lineItems) {
     // --- Header ---
     // --- Header ---
     const topMargin = 20;
-    const leftMargin = 20;
+    const leftMargin = 15;
     const contentWidth = pageWidth - (leftMargin * 2);
 
     // Logo (Top Right)
@@ -138,14 +138,16 @@ export async function generateQualityReport(entry, lineItems) {
         doc.text(value, x, valY);
     };
 
-    drawKpi("TOTAL ITEMS", totalItems.toString(), leftMargin + 10);
-    drawKpi("PASSED", passedItems.toFixed(0), leftMargin + 55, 'good');
-    drawKpi("REJECTED", totalRejections.toFixed(0), leftMargin + 100, 'bad');
+    // Calculate X positions for KPIs to be evenly spaced in the card
+    const kpiSectionW = contentWidth / 4;
+    drawKpi("TOTAL ITEMS", totalItems.toString(), leftMargin + (kpiSectionW * 0.3));
+    drawKpi("PASSED", passedItems.toFixed(0), leftMargin + (kpiSectionW * 1.3), 'good');
+    drawKpi("REJECTED", totalRejections.toFixed(0), leftMargin + (kpiSectionW * 2.3), 'bad');
 
-    // Quality Score (Custom Logic for coloring/position)
+    // Quality Score
     doc.setFontSize(8);
     setGrey();
-    const scoreX = leftMargin + 145; // Aligned with the card width
+    const scoreX = leftMargin + (kpiSectionW * 3.3);
     doc.text("QUALITY SCORE", scoreX, kpiY);
     doc.setFontSize(14);
 
@@ -231,22 +233,25 @@ export async function generateQualityReport(entry, lineItems) {
                     { label: 'Media', val: item.media_rej }
                 ];
 
-                let outputX = data.cell.x + 2;
                 const outputY = data.cell.y + 2;
-                const cardWidth = 24;
-                const cardHeight = 14;
-                const gap = 4;
 
-                // Draw "Rejections Breakdown" label small?
+                // Draw "REJECTIONS SUMMARY" subheading
                 doc.setFontSize(7);
-                doc.setTextColor(150);
-                doc.text("REJECTIONS:", outputX, outputY + 8);
-                outputX += 20;
+                doc.setFont("helvetica", "bold");
+                setGrey();
+                doc.text("REJECTIONS SUMMARY", data.cell.x, outputY + 3);
+
+                // Calculate card widths to fit contentWidth perfectly
+                const numCards = 6;
+                const gap = 3;
+                const totalGap = gap * (numCards - 1);
+                const cardWidth = (contentWidth - totalGap) / numCards;
+                const cardHeight = 14;
+                const cardsY = outputY + 5;
+
+                let currentX = data.cell.x;
 
                 stats.forEach(stat => {
-                    // Only show if value > 0 or always show? User said "Second row should just show... Rejections for each stage"
-                    // "Nice small KPI card formats".
-
                     const isRej = (stat.val || 0) > 0;
 
                     // Card Bg
@@ -257,21 +262,21 @@ export async function generateQualityReport(entry, lineItems) {
                         doc.setFillColor(249, 250, 251); // Grey tint
                         doc.setDrawColor(229, 231, 235); // Grey border
                     }
-                    doc.roundedRect(outputX, outputY, cardWidth, cardHeight, 2, 2, 'FD');
+                    doc.roundedRect(currentX, cardsY, cardWidth, cardHeight, 1.5, 1.5, 'FD');
 
                     // Label
                     doc.setFontSize(6);
                     doc.setTextColor(107, 114, 128); // Grey
-                    doc.text(stat.label, outputX + (cardWidth / 2), outputY + 5, { align: 'center' });
+                    doc.text(stat.label, currentX + (cardWidth / 2), cardsY + 5, { align: 'center' });
 
                     // Value
                     doc.setFontSize(9);
                     doc.setFont("helvetica", "bold");
                     if (isRej) doc.setTextColor(220, 38, 38); // Red
                     else doc.setTextColor(17, 24, 39); // Black
-                    doc.text((stat.val || 0).toString(), outputX + (cardWidth / 2), outputY + 11, { align: 'center' });
+                    doc.text((stat.val || 0).toString(), currentX + (cardWidth / 2), cardsY + 11, { align: 'center' });
 
-                    outputX += cardWidth + gap;
+                    currentX += cardWidth + gap;
                 });
             }
         }
