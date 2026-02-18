@@ -282,6 +282,21 @@ export async function generateQualityReport(entry, lineItems) {
         }
     });
 
+    // --- Signature Placeholder ---
+    const bottomY = pageHeight - 35;
+    doc.setDrawColor(156, 163, 175); // Grey line
+    doc.setLineWidth(0.5);
+    doc.line(pageWidth - 65, bottomY, pageWidth - leftMargin, bottomY); // Line
+
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "bold");
+    setBlack();
+    doc.text("QC Head", pageWidth - 40, bottomY + 5, { align: 'center' });
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "normal");
+    setGrey();
+    doc.text("Authorized Signature", pageWidth - 40, bottomY + 9, { align: 'center' });
+
     // --- Footer Section ---
     const footerY = pageHeight - 15;
 
