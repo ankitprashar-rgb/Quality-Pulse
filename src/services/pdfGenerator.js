@@ -47,26 +47,32 @@ export async function generateQualityReport(entry, lineItems) {
     }
 
     // --- Header ---
-    const topMargin = 15;
+    // --- Header ---
+    const topMargin = 20;
     const leftMargin = 20;
     const contentWidth = pageWidth - (leftMargin * 2);
 
-    // Logo (Top Left)
+    // Logo (Top Right)
     if (logoData) {
         const logoW = 17;
         const logoH = logoW / logoRatio;
-        doc.addImage(logoData, 'PNG', leftMargin, topMargin, logoW, logoH);
+        doc.addImage(logoData, 'PNG', pageWidth - leftMargin - logoW, topMargin - 5, logoW, logoH);
     } else {
         doc.setFontSize(14);
         doc.setTextColor(BRAND_BLACK);
-        doc.text("IDE Autoworks", leftMargin, topMargin + 5);
+        doc.text("IDE Autoworks", pageWidth - leftMargin, topMargin, { align: 'right' });
     }
 
-    // Title (Below Logo)
+    // Title (Top Left)
     doc.setFont("helvetica", "bold");
     doc.setFontSize(22);
     setBlack();
-    doc.text("Quality Assurance Report", leftMargin, topMargin + 22);
+    doc.text("Quality Assurance Report", leftMargin, topMargin + 2);
+
+    // Header Divider Line
+    doc.setDrawColor(212, 222, 71); // Neon Green
+    doc.setLineWidth(0.5);
+    doc.line(leftMargin, topMargin + 8, pageWidth - leftMargin, topMargin + 8);
 
     // Meta Data Grid (Below Divider)
     doc.setFont("helvetica", "normal");
