@@ -51,10 +51,8 @@ export async function generateQualityReport(entry, lineItems) {
 
     // Logo (Top Right)
     if (logoData) {
-        // Fix width to 50mm, calculate height based on ratio
-        // If ratio is < 1 (tall), maybe constrain height instead? 
-        // Assuming horizontal logo > 1.
-        const logoW = 50;
+        // Fix width to 17mm (1/3rd of previous), calculate height based on ratio
+        const logoW = 17;
         const logoH = logoW / logoRatio;
         doc.addImage(logoData, 'PNG', pageWidth - 20 - logoW, topMargin - 5, logoW, logoH);
     } else {
