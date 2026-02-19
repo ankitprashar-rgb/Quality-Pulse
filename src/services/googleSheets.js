@@ -170,6 +170,18 @@ export async function appendRejectionToSheet(entry) {
         // Headers strictly followed:
         // Timestamp, Date, Client Name, Project Name, Vertical, Size, Print Media, Lamination Media, Printer Model, Product / Panel, Master Qty, Batch Qty, Qty Delivered, In Stock, Qty Rejected, Rejection %, Rejection Reason, Design File Rejection, Printing Rejection, Lamination Rejection, Cut Rejection, Packaging Rejection, Media Rejection, Design Rejection Images, Printing Rejection Images, Lamination Rejection Images, Printing Rejection Images, Packaging Rejection Images, Media Rejection Images
 
+        // Construct Rejection Reason string: Breakdown + Comment
+        const breakdown = [
+            `Design: ${entry.design_rej}`,
+            `Print: ${entry.print_rej}`,
+            `Lam: ${entry.lam_rej}`,
+            `Cut: ${entry.cut_rej}`,
+            `Pack: ${entry.pack_rej}`,
+            `Media: ${entry.media_rej}`
+        ].join(', ');
+
+        const reasonField = entry.reason ? `${breakdown} | ${entry.reason}` : breakdown;
+
         const values = [[
             new Date().toLocaleString(), // Timestamp
             entry.date,
@@ -187,7 +199,7 @@ export async function appendRejectionToSheet(entry) {
             entry.in_stock,
             entry.qty_rejected,
             entry.rejection_percent + '%',
-            entry.reason,
+            reasonField,
             entry.design_rej,
             entry.print_rej,
             entry.lam_rej,
