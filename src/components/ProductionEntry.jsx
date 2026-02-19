@@ -13,6 +13,7 @@ export default function ProductionEntry({ clients, mediaOptions, onSaved, showTo
     const [projectName, setProjectName] = useState('');
     const [printerModel, setPrinterModel] = useState('');
     const [projects, setProjects] = useState([]);
+    const [loadingProjects, setLoadingProjects] = useState(false);
     const [lineItems, setLineItems] = useState([]);
     const [isSaving, setIsSaving] = useState(false);
 
@@ -103,11 +104,14 @@ export default function ProductionEntry({ clients, mediaOptions, onSaved, showTo
     }, [projectName, projects]);
 
     async function loadProjects() {
+        setLoadingProjects(true);
         try {
             const data = await fetchProjectsForClient(clientName);
             setProjects(data);
         } catch (error) {
             console.error('Error loading projects:', error);
+        } finally {
+            setLoadingProjects(false);
         }
     }
 
@@ -115,6 +119,13 @@ export default function ProductionEntry({ clients, mediaOptions, onSaved, showTo
         try {
             const stats = await fetchProjectDeliveredStats(clientName, projectName);
             setGlobalDeliveredStats(stats);
+
+            // Check for project completion immediately upon loading stats
+            const projectData = projects.filter(p => p.project === projectName);
+            const isComplete = checkProjectCompletion(projectData, stats);
+            if (isComplete) {
+                showToast(`Project "${projectName}" Completed! 🚀`, 5000);
+            }
         } catch (error) {
             console.error('Error fetching global stats:', error);
             if (error.message.includes('403')) {
@@ -146,8 +157,6 @@ export default function ProductionEntry({ clients, mediaOptions, onSaved, showTo
             }
         });
 
-        // Check for project completion immediately upon loading stats
-        checkProjectCompletion(projectData, stats);
 
         const items = Array.from(aggregatedMap.values()).map((p, idx) => ({
             id: idx,
@@ -491,13 +500,17 @@ export default function ProductionEntry({ clients, mediaOptions, onSaved, showTo
                     </div>
 
                     <div className="form-field">
-                        <label>Project Name</label>
+                        <label>
+                            Project Name
+                            {loadingProjects && <span style={{ marginLeft: '8px', fontSize: '0.85em', color: '#666' }}>Loading projects...</span>}
+                        </label>
                         <input
                             type="text"
                             list="projects-list"
                             value={projectName}
                             onChange={(e) => setProjectName(e.target.value)}
-                            placeholder="Type or select project"
+                            placeholder={loadingProjects ? "Loading..." : "Type or select project"}
+                            disabled={loadingProjects}
                         />
                         <datalist id="projects-list">
                             {[...new Set(projects.map(p => p.project))].map((projectName, idx) => (
