@@ -5,7 +5,6 @@ import TodayOverview from './components/TodayOverview';
 import PendingProduction from './components/PendingProduction';
 import ProductionEntry from './components/ProductionEntry';
 import ClientExplorer from './components/ClientExplorer';
-import Loader from './components/Loader';
 import Toast from './components/Toast';
 import { calculateMetrics, migrateHistoricalData } from './services/supabase';
 import { fetchClients, fetchMediaOptions } from './services/googleSheets';
