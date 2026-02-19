@@ -227,3 +227,32 @@ export async function appendRejectionToSheet(entry) {
         throw error;
     }
 }
+
+/**
+ * Fetch total delivered quantity for each product in a project
+ * Returns a map: { "Product Name": totalDeliveredQty }
+ */
+export async function fetchProjectDeliveredStats(projectName) {
+    const BACKEND_SHEET_ID = import.meta.env.VITE_BACKEND_SHEET_ID;
+    if (!BACKEND_SHEET_ID || !projectName) return {};
+
+    const rows = await fetchSheetData(BACKEND_SHEET_ID, 'Rejection Log!A:Z');
+    const data = parseSheetData(rows);
+    const targetProject = projectName.trim();
+
+    const stats = {};
+
+    data.forEach(row => {
+        const pName = (getValue(row, ['Project Name', 'Project']) || '').trim();
+        if (pName === targetProject) {
+            const product = (getValue(row, ['Product / Panel', 'Product', 'Panel']) || '').trim();
+            const delivered = parseFloat(getValue(row, ['Qty Delivered', 'Delivered'])) || 0;
+
+            if (product) {
+                stats[product] = (stats[product] || 0) + delivered;
+            }
+        }
+    });
+
+    return stats;
+}

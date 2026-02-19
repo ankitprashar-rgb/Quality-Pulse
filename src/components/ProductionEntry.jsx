@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { saveRejectionEntry, fetchMasters } from '../services/supabase';
-import { fetchProjectsForClient, appendRejectionToSheet } from '../services/googleSheets';
+import { fetchProjectsForClient, appendRejectionToSheet, fetchProjectDeliveredStats } from '../services/googleSheets';
 import { uploadFile } from '../services/googleDrive';
 import { getTodayDate, calculateRejectionRate, strictTruncate } from '../utils/helpers';
 import './ProductionEntry.css';
@@ -15,8 +15,7 @@ export default function ProductionEntry({ clients, mediaOptions, onSaved, showTo
     const [lineItems, setLineItems] = useState([]);
     const [loading, setLoading] = useState(false);
 
-    const [supabaseMasters, setSupabaseMasters] = useState({ printMedia: [], lamMedia: [], printers: [] });
-    const [mergedOptions, setMergedOptions] = useState({ printMedia: [], lamMedia: [], printers: [] });
+    const [globalDeliveredStats, setGlobalDeliveredStats] = useState({});
 
     // Fetch Supabase masters on mount
     useEffect(() => {
@@ -88,11 +87,15 @@ export default function ProductionEntry({ clients, mediaOptions, onSaved, showTo
                 if (projectData.vertical) setVertical(projectData.vertical);
                 if (projectData.printerModel) setPrinterModel(projectData.printerModel);
 
+                // Load Global Stats
+                loadGlobalStats();
+
                 // Load line items
                 loadLineItems();
             }
         } else {
             setLineItems([]);
+            setGlobalDeliveredStats({});
         }
     }, [projectName, projects]);
 
@@ -102,6 +105,15 @@ export default function ProductionEntry({ clients, mediaOptions, onSaved, showTo
             setProjects(data);
         } catch (error) {
             console.error('Error loading projects:', error);
+        }
+    }
+
+    async function loadGlobalStats() {
+        try {
+            const stats = await fetchProjectDeliveredStats(projectName);
+            setGlobalDeliveredStats(stats);
+        } catch (error) {
+            console.error('Error fetching global stats:', error);
         }
     }
 
@@ -199,7 +211,11 @@ export default function ProductionEntry({ clients, mediaOptions, onSaved, showTo
         const rejectionPercent = calculateRejectionRate(totalRej, denominator);
         const delivered = (batchQty || 0) - totalRej;
         const inStock = Math.max(0, delivered - masterQty);
-        const remaining = Math.max(0, masterQty - delivered);
+
+        // Global logic
+        // Trim product name to match keys in stats map
+        const globalDelivered = globalDeliveredStats[item.product.trim()] || 0;
+        const remaining = masterQty - (globalDelivered + delivered);
 
         return { totalRej, rejectionPercent, delivered, remaining, inStock };
     }
@@ -640,12 +656,15 @@ function LineItemCard({ item, index, metrics, onUpdate, onRemove }) {
                 </div>
                 <div className="metric-inline">
                     <span className="metric-inline-label">Remaining:</span>
-                    <span className="metric-inline-value">{Math.max(0, metrics.remaining).toFixed(2)}</span>
+                    {/* Green if <= 0 (all delivered), Red if > 0 (still pending) */}
+                    <span className={`metric-inline-value ${metrics.remaining <= 0 ? 'text-green' : 'text-red'}`}>
+                        {Math.max(0, metrics.remaining).toFixed(2)}
+                    </span>
                 </div>
-                {metrics.remaining < 0 && (
+                {matches.inStock > 0 && (
                     <div className="metric-inline">
                         <span className="metric-inline-label">In Stock:</span>
-                        <span className="metric-inline-value text-green">{Math.abs(metrics.remaining).toFixed(2)}</span>
+                        <span className="metric-inline-value text-green">{metrics.inStock.toFixed(2)}</span>
                     </div>
                 )}
             </div>
