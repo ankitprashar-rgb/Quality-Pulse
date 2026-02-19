@@ -109,7 +109,7 @@ function App() {
         cutRate: 0,
         packagingRate: 0,
         mediaRate: 0
-      }} />
+      }} loading={loading} />
 
       <TodayOverview />
 
@@ -122,12 +122,13 @@ function App() {
           onSaved={handleEntrySaved}
           showToast={showToast}
           prefillData={selectedProject}
+          loading={loading}
         />
       </div>
 
       <ClientExplorer clients={clients} />
 
-      <Loader visible={loading} />
+      {/* Loader removed in favor of skeletal loading */}
       <Toast visible={toast.visible} message={toast.message} />
     </div>
   );

@@ -3,6 +3,7 @@ import { fetchRejectionLogs, updateRejectionEntry, deleteRejectionEntry } from '
 import { formatPercent, formatNum, formatDate, generateExcelFilename } from '../utils/helpers';
 import * as XLSX from 'xlsx';
 import { generateQualityReport } from '../services/pdfGenerator';
+import Skeleton from './Skeleton';
 import './ClientExplorer.css';
 
 /** Consolidate logs by client+project */
@@ -241,7 +242,32 @@ export default function ClientExplorer({ clients }) {
                 </div>
 
                 {loading ? (
-                    <div style={{ padding: '20px', textAlign: 'center', color: '#6b7280' }}>Loading...</div>
+                    <div className="overview-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th className="th-icon"></th>
+                                    <th>Client</th>
+                                    <th>Project</th>
+                                    <th>Vertical</th>
+                                    <th>Master Qty</th>
+                                    <th>Rejection %</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {[1, 2, 3, 4, 5].map(i => (
+                                    <tr key={i} className="overview-row">
+                                        <td><Skeleton type="circle" width="20px" height="20px" /></td>
+                                        <td><Skeleton type="text" width="120px" /></td>
+                                        <td><Skeleton type="text" width="150px" /></td>
+                                        <td><Skeleton type="text" width="80px" /></td>
+                                        <td><Skeleton type="text" width="60px" /></td>
+                                        <td><Skeleton type="text" width="50px" /></td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 ) : filtered.length === 0 ? (
                     <div style={{ padding: '20px', textAlign: 'center', color: '#6b7280' }}>
                         {clientFilter ? 'No matching projects found.' : 'No entries found.'}

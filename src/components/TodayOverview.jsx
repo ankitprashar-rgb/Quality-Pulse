@@ -3,6 +3,7 @@ import { fetchRejectionLogs, deleteRejectionEntry, updateRejectionEntry } from '
 import { formatPercent, formatNum } from '../utils/helpers';
 import * as XLSX from 'xlsx';
 import { generateQualityReport } from '../services/pdfGenerator';
+import Skeleton from './Skeleton';
 import './TodayOverview.css';
 
 /** Group raw logs by client+project, sum quantities, keep raw entry IDs */
@@ -199,7 +200,46 @@ export default function TodayOverview() {
         }
     }
 
-    if (loading) return <div className="card"><div className="card-body">Loading...</div></div>;
+    if (loading) {
+        return (
+            <section className="card">
+                <div className="card-header">
+                    <div>
+                        <h2>Today's Project Overview</h2>
+                        <div className="card-subtitle"><Skeleton type="text" width="200px" /></div>
+                    </div>
+                </div>
+                <div className="card-body">
+                    <div className="overview-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th className="th-icon"></th>
+                                    <th>Client</th>
+                                    <th>Project</th>
+                                    <th>Vertical</th>
+                                    <th>Master Qty</th>
+                                    <th>Rejection %</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {[1, 2, 3].map(i => (
+                                    <tr key={i} className="overview-row">
+                                        <td><Skeleton type="circle" width="20px" height="20px" /></td>
+                                        <td><Skeleton type="text" width="120px" /></td>
+                                        <td><Skeleton type="text" width="150px" /></td>
+                                        <td><Skeleton type="text" width="80px" /></td>
+                                        <td><Skeleton type="text" width="60px" /></td>
+                                        <td><Skeleton type="text" width="50px" /></td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        );
+    }
     const consolidated = consolidate(projects);
 
     const totalRej = consolidated.reduce((acc, p) => acc + p.qty_rejected, 0);

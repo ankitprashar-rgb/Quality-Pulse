@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { fetchAllProjects } from '../services/googleSheets';
 import { fetchRejectionLogs } from '../services/supabase';
 import { formatDate } from '../utils/helpers';
+import Skeleton from './Skeleton';
 import './PendingProduction.css';
 
 export default function PendingProduction({ onSelectProject }) {
@@ -156,8 +157,27 @@ export default function PendingProduction({ onSelectProject }) {
                 </div>
 
                 {loading ? (
-                    <div style={{ padding: '20px', textAlign: 'center', color: '#6b7280' }}>
-                        Loading pending production...
+                    <div className="pending-grid">
+                        {[1, 2, 3].map(i => (
+                            <div key={i} className="pending-card" style={{ height: '180px', borderLeft: '4px solid #e0e0e0' }}>
+                                <div className="pc-header-bar">
+                                    <Skeleton type="text" width="100px" />
+                                </div>
+                                <div className="pc-body">
+                                    <div className="pc-identity" style={{ gap: '8px' }}>
+                                        <Skeleton type="text" width="80px" height="0.8em" />
+                                        <Skeleton type="text" width="60%" height="1.2em" />
+                                        <Skeleton type="text" width="80%" height="1em" />
+                                    </div>
+                                    <div className="pc-metrics-grid" style={{ marginTop: '16px' }}>
+                                        <Skeleton type="rect" width="100%" height="40px" />
+                                        <Skeleton type="rect" width="100%" height="40px" />
+                                        <Skeleton type="rect" width="100%" height="40px" />
+                                        <Skeleton type="rect" width="100%" height="40px" />
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 ) : activeItems.length === 0 && archivedItems.length === 0 ? (
                     <div style={{ padding: '20px', textAlign: 'center', color: '#6b7280' }}>

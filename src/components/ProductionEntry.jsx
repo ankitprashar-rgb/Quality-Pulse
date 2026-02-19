@@ -3,9 +3,10 @@ import { saveRejectionEntry, fetchMasters } from '../services/supabase';
 import { fetchProjectsForClient, appendRejectionToSheet, fetchProjectDeliveredStats } from '../services/googleSheets';
 import { uploadFile } from '../services/googleDrive';
 import { getTodayDate, calculateRejectionRate, strictTruncate } from '../utils/helpers';
+import Skeleton from './Skeleton';
 import './ProductionEntry.css';
 
-export default function ProductionEntry({ clients, mediaOptions, onSaved, showToast, prefillData }) {
+export default function ProductionEntry({ clients, mediaOptions, onSaved, showToast, prefillData, loading }) {
     const [date, setDate] = useState(getTodayDate());
     const [clientName, setClientName] = useState('');
     const [vertical, setVertical] = useState('');
@@ -346,6 +347,38 @@ export default function ProductionEntry({ clients, mediaOptions, onSaved, showTo
         } finally {
             setLoading(false);
         }
+    }
+
+    // Loading Skeleton
+    if (loading) {
+        return (
+            <section className="card">
+                <div className="card-header">
+                    <h2>New Production Entry</h2>
+                    <div className="card-subtitle">Log rejected items</div>
+                </div>
+                <div className="card-body">
+                    <div className="form-grid">
+                        <div className="form-group">
+                            <label>Date</label>
+                            <Skeleton type="rect" width="100%" height="40px" />
+                        </div>
+                        <div className="form-group">
+                            <label>Client Name</label>
+                            <Skeleton type="rect" width="100%" height="40px" />
+                        </div>
+                        <div className="form-group">
+                            <label>Project Name</label>
+                            <Skeleton type="rect" width="100%" height="40px" />
+                        </div>
+                        <div className="form-group">
+                            <label>Vertical</label>
+                            <Skeleton type="rect" width="100%" height="40px" />
+                        </div>
+                    </div>
+                </div>
+            </section>
+        );
     }
 
     return (
