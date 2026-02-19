@@ -123,7 +123,15 @@ export default function TodayOverview() {
     async function confirmDelete() {
         if (!deleteConfirm) return;
         try {
-            await deleteRejectionEntry(deleteConfirm);
+            if (Array.isArray(deleteConfirm)) {
+                // Batch delete
+                for (const id of deleteConfirm) {
+                    await deleteRejectionEntry(id);
+                }
+            } else {
+                // Single delete
+                await deleteRejectionEntry(deleteConfirm);
+            }
             await loadProjects();
             setDeleteConfirm(null);
         } catch (error) { console.error('Error deleting:', error); alert('Error deleting entry.'); }
@@ -299,7 +307,21 @@ export default function TodayOverview() {
                                             <td>{p.vertical}</td>
                                             <td>{formatNum(p.master_qty)}</td>
                                             <td className={`col-bold ${p.rejection_percent > 3 ? 'text-red' : ''}`}>
-                                                {formatPercent(p.rejection_percent)}
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                    {formatPercent(p.rejection_percent)}
+                                                    <button
+                                                        className="icon-btn delete"
+                                                        onClick={e => {
+                                                            e.stopPropagation();
+                                                            const ids = p.rawRows.map(r => r.id);
+                                                            if (ids.length > 0) setDeleteConfirm(ids);
+                                                        }}
+                                                        title="Delete Entire Project"
+                                                        style={{ width: '24px', height: '24px', padding: 0, marginLeft: '8px' }}
+                                                    >
+                                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" /></svg>
+                                                    </button>
+                                                </div>
                                             </td>
                                         </tr>
                                         {expanded.has(idx) && (
@@ -427,11 +449,26 @@ export default function TodayOverview() {
             {deleteConfirm && (
                 <div className="modal-overlay" style={{ zIndex: 99999 }} onClick={() => setDeleteConfirm(null)}>
                     <div className="modal-box" onClick={e => e.stopPropagation()}>
-                        <div className="modal-title">Delete Entry</div>
-                        <p>Are you sure you want to delete this entry? This action cannot be undone.</p>
+                        <div className="modal-title">
+                            {Array.isArray(deleteConfirm) ? 'Delete Entire Project?' : 'Delete Entry?'}
+                        </div>
+                        <p>
+                            {Array.isArray(deleteConfirm)
+                                ? `Are you sure you want to delete ALL ${deleteConfirm.length} entries for this project? This action cannot be undone.`
+                                : 'Are you sure you want to delete this entry? This action cannot be undone.'
+                            }
+                        </p>
                         <div className="modal-actions">
                             <button className="action-btn cancel" onClick={() => setDeleteConfirm(null)}>Cancel</button>
-                            <button className="action-btn delete" onClick={confirmDelete}>Delete</button>
+                            <button
+                                className="action-btn delete"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    confirmDelete();
+                                }}
+                            >
+                                Delete
+                            </button>
                         </div>
                     </div>
                 </div>
