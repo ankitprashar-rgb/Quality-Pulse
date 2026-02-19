@@ -230,6 +230,8 @@ export default function ProductionEntry({ clients, mediaOptions, onSaved, showTo
 
                 const metrics = calculateLineItemMetrics(item);
 
+                // Explicitly construct the full entry object with all derived metrics
+                // This ensures we have all data even if Supabase doesn't return it due to RLS
                 const entry = {
                     date: date,
                     client_name: clientName,
@@ -248,7 +250,12 @@ export default function ProductionEntry({ clients, mediaOptions, onSaved, showTo
                     cut_rej: parseFloat(item.cutRej) || 0,
                     pack_rej: parseFloat(item.packRej) || 0,
                     media_rej: parseFloat(item.mediaRej) || 0,
-                    reason: item.reason || ''
+                    reason: item.reason || '',
+                    // Derived metrics
+                    qty_rejected: strictTruncate(metrics.totalRej),
+                    qty_delivered: strictTruncate(metrics.delivered),
+                    rejection_percent: metrics.rejectionPercent,
+                    in_stock: strictTruncate(metrics.inStock)
                 };
 
                 // Upload images to Drive
@@ -265,25 +272,45 @@ export default function ProductionEntry({ clients, mediaOptions, onSaved, showTo
 
                 for (const [key, files] of Object.entries(item.images)) {
                     if (files && files.length > 0) {
-                        const path = [...folderPath, categoryMap[key]];
-                        const links = [];
-                        for (const file of files) {
-                            const link = await uploadFile(file, path);
-                            links.push(link);
+                        try {
+                            const path = [...folderPath, categoryMap[key]];
+                            const links = [];
+                            for (const file of files) {
+                                const link = await uploadFile(file, path);
+                                links.push(link);
+                            }
+                            imageUrls[key] = links.join(', ');
+                        } catch (imgError) {
+                            console.error(`Error uploading ${key} images:`, imgError);
+                            // Continue without failing the whole save
                         }
-                        imageUrls[key] = links.join(', ');
                     }
                 }
 
-                // Save to Supabase
-                const savedEntry = await saveRejectionEntry(entry);
+                // 1. Save to Supabase
+                try {
+                    await saveRejectionEntry(entry);
+                } catch (dbError) {
+                    console.error('Supabase save failed:', dbError);
+                    // Decide if we should continue or throw. 
+                    // For now, log but proceed to Sheet if possible, or throw to stop?
+                    // Usually database is source of truth, so we should probably throw or alert.
+                    // But user specifically wants Sheets to work even if DB has issues (like RLS).
+                    // We'll treat them somewhat independently but alert on failure.
+                    showToast('Warning: Database save failed, attempting Google Sheets backup...');
+                }
 
-                // Append to Google Sheet (with printer and images)
-                await appendRejectionToSheet({
-                    ...savedEntry,
-                    printer_model: printerModel,
-                    images: imageUrls
-                });
+                // 2. Append to Google Sheet (using our local complete entry object)
+                try {
+                    await appendRejectionToSheet({
+                        ...entry,
+                        printer_model: printerModel,
+                        images: imageUrls
+                    });
+                } catch (sheetError) {
+                    console.error('Google Sheet save failed:', sheetError);
+                    showToast('Warning: Google Sheet save failed');
+                }
             }
 
             // Reset form
@@ -294,9 +321,10 @@ export default function ProductionEntry({ clients, mediaOptions, onSaved, showTo
             setDate(getTodayDate());
 
             onSaved();
+            showToast('Entry saved successfully!');
         } catch (error) {
             console.error('Error saving entry:', error);
-            showToast('Error saving entry. Please try again.');
+            showToast('Error saving entry. Please check console for details.');
         } finally {
             setLoading(false);
         }

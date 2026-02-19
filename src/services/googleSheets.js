@@ -62,11 +62,25 @@ export async function fetchClients() {
     const rows = await fetchSheetData(CENTRAL_SHEET_ID, 'Clients!A:C');
     const clients = parseSheetData(rows);
 
-    return clients.map(c => ({
-        name: getValue(c, ['Client Name', 'Client']),
+    const mappedClients = clients.map(c => ({
+        name: (getValue(c, ['Client Name', 'Client']) || '').trim(),
         vertical: getValue(c, ['Vertical']),
         contact: getValue(c, ['Contact'])
     })).filter(c => c.name);
+
+    // Deduplicate: Keep exact string matches only once (case-sensitive)
+    const seen = new Set();
+    const uniqueClients = [];
+
+    for (const client of mappedClients) {
+        // "A" !== "a", so this preserves case mismatched duplicates as requested
+        if (!seen.has(client.name)) {
+            seen.add(client.name);
+            uniqueClients.push(client);
+        }
+    }
+
+    return uniqueClients;
 }
 
 /**
