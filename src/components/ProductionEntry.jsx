@@ -389,8 +389,8 @@ export default function ProductionEntry({ clients, mediaOptions, onSaved, showTo
                             placeholder="Type or select project"
                         />
                         <datalist id="projects-list">
-                            {projects.map((p, idx) => (
-                                <option key={idx} value={p.project} />
+                            {[...new Set(projects.map(p => p.project))].map((projectName, idx) => (
+                                <option key={idx} value={projectName} />
                             ))}
                         </datalist>
                     </div>

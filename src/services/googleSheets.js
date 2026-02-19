@@ -96,7 +96,7 @@ export async function fetchProjectsForClient(clientName) {
         .filter(p => (getValue(p, ['Client Name', 'Client']) || '').trim() === targetClient)
         .map(p => ({
             client: getValue(p, ['Client Name', 'Client']),
-            project: getValue(p, ['Project Name', 'Project']),
+            project: (getValue(p, ['Project Name', 'Project']) || '').trim(),
             vertical: getValue(p, ['Vertical']),
             product: getValue(p, ['Product Name', 'Product / Panel', 'Product', 'Panel']),
             masterQty: parseFloat(getValue(p, ['Master Qty', 'Quantity', 'Qty'])) || 0,
