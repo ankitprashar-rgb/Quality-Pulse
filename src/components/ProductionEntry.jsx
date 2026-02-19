@@ -113,7 +113,7 @@ export default function ProductionEntry({ clients, mediaOptions, onSaved, showTo
 
     async function loadGlobalStats() {
         try {
-            const stats = await fetchProjectDeliveredStats(projectName);
+            const stats = await fetchProjectDeliveredStats(clientName, projectName);
             setGlobalDeliveredStats(stats);
         } catch (error) {
             console.error('Error fetching global stats:', error);

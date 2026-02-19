@@ -232,19 +232,22 @@ export async function appendRejectionToSheet(entry) {
  * Fetch total delivered quantity for each product in a project
  * Returns a map: { "Product Name": totalDeliveredQty }
  */
-export async function fetchProjectDeliveredStats(projectName) {
+export async function fetchProjectDeliveredStats(clientName, projectName) {
     const BACKEND_SHEET_ID = import.meta.env.VITE_BACKEND_SHEET_ID;
-    if (!BACKEND_SHEET_ID || !projectName) return {};
+    if (!BACKEND_SHEET_ID || !projectName || !clientName) return {};
 
     const rows = await fetchSheetData(BACKEND_SHEET_ID, 'Rejection Log!A:Z');
     const data = parseSheetData(rows);
     const targetProject = (projectName || '').trim().toLowerCase();
+    const targetClient = (clientName || '').trim().toLowerCase();
 
     const stats = {};
 
     data.forEach(row => {
         const pName = (getValue(row, ['Project Name', 'Project']) || '').trim().toLowerCase();
-        if (pName === targetProject) {
+        const cName = (getValue(row, ['Client Name', 'Client']) || '').trim().toLowerCase();
+
+        if (pName === targetProject && cName === targetClient) {
             const product = (getValue(row, ['Product / Panel', 'Product', 'Panel']) || '').trim().toLowerCase();
             const delivered = parseFloat(getValue(row, ['Qty Delivered', 'Delivered'])) || 0;
 
