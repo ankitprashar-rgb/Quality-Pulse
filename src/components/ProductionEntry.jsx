@@ -14,7 +14,7 @@ export default function ProductionEntry({ clients, mediaOptions, onSaved, showTo
     const [printerModel, setPrinterModel] = useState('');
     const [projects, setProjects] = useState([]);
     const [lineItems, setLineItems] = useState([]);
-    const [loading, setLoading] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
 
     const [globalDeliveredStats, setGlobalDeliveredStats] = useState({});
     const [supabaseMasters, setSupabaseMasters] = useState({ printMedia: [], lamMedia: [], printers: [] });
@@ -241,7 +241,7 @@ export default function ProductionEntry({ clients, mediaOptions, onSaved, showTo
             }
         }
 
-        setLoading(true);
+        setIsSaving(true);
         try {
             // Save each line item
             for (const item of lineItems) {
@@ -345,7 +345,7 @@ export default function ProductionEntry({ clients, mediaOptions, onSaved, showTo
             console.error('Error saving entry:', error);
             showToast('Error saving entry. Please check console for details.');
         } finally {
-            setLoading(false);
+            setIsSaving(false);
         }
     }
 
@@ -487,9 +487,9 @@ export default function ProductionEntry({ clients, mediaOptions, onSaved, showTo
                     <button
                         className="primary-btn"
                         onClick={handleSave}
-                        disabled={loading || lineItems.length === 0}
+                        disabled={isSaving || lineItems.length === 0}
                     >
-                        {loading ? 'Saving...' : 'Save Entry'}
+                        {isSaving ? 'Saving...' : 'Save Entry'}
                     </button>
                 </div>
 
