@@ -75,7 +75,7 @@ function consolidate(logs) {
     });
 }
 
-export default function TodayOverview() {
+export default function TodayOverview({ refreshTrigger, onDeleted }) {
     const [projects, setProjects] = useState([]);
     const [loading, setLoading] = useState(false);
     const [expanded, setExpanded] = useState(new Set());
@@ -83,7 +83,7 @@ export default function TodayOverview() {
     const [editData, setEditData] = useState(null);
     const [deleteConfirm, setDeleteConfirm] = useState(null);
 
-    useEffect(() => { loadProjects(); }, []);
+    useEffect(() => { loadProjects(); }, [refreshTrigger]);
 
     async function loadProjects() {
         setLoading(true);
@@ -134,6 +134,7 @@ export default function TodayOverview() {
             }
             await loadProjects();
             setDeleteConfirm(null);
+            if (onDeleted) onDeleted(); // Notify parent to refresh metrics
         } catch (error) { console.error('Error deleting:', error); alert('Error deleting entry.'); }
     }
 

@@ -262,17 +262,28 @@ export async function deleteRejectionRow(entry) {
         for (let i = rows.length - 1; i >= 1; i--) {
             const r = rows[i];
 
-            // Loose matching to account for formatting differences
-            const matchClient = (r[idxClient] || '').trim() === (entry.client_name || '').trim();
-            const matchProject = (r[idxProject] || '').trim() === (entry.project_name || '').trim();
-            const matchProduct = (r[idxProduct] || '').trim() === (entry.product || '').trim();
-            // Date might differ in format (Locales), so we might skip it or be very loose
-            // const matchDate = (r[idxDate] || '').includes(entry.date); 
-            const matchQty = parseFloat(r[idxRejQty]) === parseFloat(entry.qty_rejected);
+            // Loose matching (case-insensitive + trimmed)
+            const rowClient = (r[idxClient] || '').trim().toLowerCase();
+            const rowProject = (r[idxProject] || '').trim().toLowerCase();
+            const rowProduct = (r[idxProduct] || '').trim().toLowerCase();
+
+            const targetClient = (entry.client_name || '').trim().toLowerCase();
+            const targetProject = (entry.project_name || '').trim().toLowerCase();
+            const targetProduct = (entry.product || '').trim().toLowerCase();
+
+            const matchClient = rowClient === targetClient;
+            const matchProject = rowProject === targetProject;
+            const matchProduct = rowProduct === targetProduct;
+
+            // Numeric tolerance for quantity (epsilon = 0.05)
+            const rowQty = parseFloat(r[idxRejQty]);
+            const targetQty = parseFloat(entry.qty_rejected);
+
+            const matchQty = !isNaN(rowQty) && !isNaN(targetQty) && Math.abs(rowQty - targetQty) < 0.05;
 
             if (matchClient && matchProject && matchProduct && matchQty) {
-                rowIndexToDelete = i; // 0-based index in 'rows'
-                break; // Delete the most recent match
+                rowIndexToDelete = i;
+                break;
             }
         }
 

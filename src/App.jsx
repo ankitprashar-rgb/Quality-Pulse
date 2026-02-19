@@ -15,6 +15,7 @@ function App() {
   const [mediaOptions, setMediaOptions] = useState(null);
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState({ visible: false, message: '' });
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   useEffect(() => {
     loadInitialData();
@@ -76,8 +77,16 @@ function App() {
   function handleEntrySaved() {
     // Reload today's metrics
     calculateMetrics('today').then(setMetrics).catch(console.error);
+    setRefreshTrigger(prev => prev + 1); // Trigger TodayOverview refresh
     showToast('Entry saved successfully!');
     setSelectedProject(null); // Clear selection after saving
+  }
+
+  function handleEntryDeleted() {
+    // Reload metrics and list
+    calculateMetrics('today').then(setMetrics).catch(console.error);
+    setRefreshTrigger(prev => prev + 1);
+    showToast('Entry deleted successfully!');
   }
 
   return (
@@ -110,7 +119,7 @@ function App() {
         mediaRate: 0
       }} loading={loading} />
 
-      <TodayOverview />
+      <TodayOverview refreshTrigger={refreshTrigger} onDeleted={handleEntryDeleted} />
 
       <PendingProduction onSelectProject={handleSelectProject} />
 
