@@ -16,6 +16,8 @@ export default function ProductionEntry({ clients, mediaOptions, onSaved, showTo
     const [loading, setLoading] = useState(false);
 
     const [globalDeliveredStats, setGlobalDeliveredStats] = useState({});
+    const [supabaseMasters, setSupabaseMasters] = useState({ printMedia: [], lamMedia: [], printers: [] });
+    const [mergedOptions, setMergedOptions] = useState({ printMedia: [], lamMedia: [], printers: [] });
 
     // Fetch Supabase masters on mount
     useEffect(() => {
