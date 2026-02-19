@@ -117,6 +117,11 @@ export default function ProductionEntry({ clients, mediaOptions, onSaved, showTo
             setGlobalDeliveredStats(stats);
         } catch (error) {
             console.error('Error fetching global stats:', error);
+            if (error.message.includes('403')) {
+                showToast('Permission Denied: Rejection Log Sheet. Check Service Account access.', 5000);
+            } else {
+                showToast(`Error fetching stats: ${error.message}`);
+            }
         }
     }
 

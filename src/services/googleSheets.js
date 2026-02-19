@@ -6,24 +6,19 @@ const CENTRAL_SHEET_ID = import.meta.env.VITE_CENTRAL_SHEET_ID;
  * Fetch data from Google Sheets using service account auth
  */
 async function fetchSheetData(sheetId, range) {
-    try {
-        const token = await getAccessToken();
-        const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(range)}`;
+    const token = await getAccessToken();
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(range)}`;
 
-        const response = await fetch(url, {
-            headers: { Authorization: `Bearer ${token}` }
-        });
+    const response = await fetch(url, {
+        headers: { Authorization: `Bearer ${token}` }
+    });
 
-        if (!response.ok) {
-            const errText = await response.text();
-            throw new Error(`Google Sheets API error (${response.status}): ${errText}`);
-        }
-        const data = await response.json();
-        return data.values || [];
-    } catch (error) {
-        console.error('Error fetching sheet data:', error);
-        return [];
+    if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(`Google Sheets API error (${response.status}): ${errText}`);
     }
+    const data = await response.json();
+    return data.values || [];
 }
 
 /**
