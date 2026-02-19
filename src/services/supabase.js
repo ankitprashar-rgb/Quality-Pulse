@@ -156,6 +156,19 @@ export async function updateRejectionEntry(id, entry) {
  * Delete rejection entry
  */
 export async function deleteRejectionEntry(id) {
+    // 1. Fetch current data first to be able to delete from Google Sheet (need content to match)
+    const { data: entry, error: fetchError } = await supabase
+        .from('rejection_log')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+    if (fetchError) {
+        console.error('Error fetching entry for deletion:', fetchError);
+        // Continue to try delete anyway if it's just a fetch error, but GSheet delete will fail
+    }
+
+    // 2. Delete from Supabase
     const { error } = await supabase
         .from('rejection_log')
         .delete()
@@ -164,6 +177,13 @@ export async function deleteRejectionEntry(id) {
     if (error) {
         console.error('Error deleting rejection entry:', error);
         throw error;
+    }
+
+    // 3. Delete from Google Sheet (Fire and forget, don't block UI)
+    if (entry) {
+        import('./googleSheets').then(module => {
+            module.deleteRejectionRow(entry).catch(err => console.error('GSheet delete failed:', err));
+        });
     }
 
     return true;

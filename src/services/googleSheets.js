@@ -217,9 +217,113 @@ export async function appendRejectionToSheet(entry) {
         }
 
         return await response.json();
+        return await response.json();
     } catch (error) {
         console.error('Error appending to sheet:', error);
         throw error;
+    }
+}
+
+/**
+ * Delete a rejection entry from the Google Sheet by matching its content.
+ * Since we don't store row IDs, we must find the row that matches critical fields.
+ */
+export async function deleteRejectionRow(entry) {
+    const BACKEND_SHEET_ID = import.meta.env.VITE_BACKEND_SHEET_ID;
+    if (!BACKEND_SHEET_ID) return;
+
+    try {
+        const token = await getAccessToken();
+
+        // 1. Fetch all rows to find the index
+        // Limit to last 1000 rows for performance if possible, but for safety fetch all for now
+        // Assuming 'Rejection Log' is the sheet name
+        const rows = await fetchSheetData(BACKEND_SHEET_ID, 'Rejection Log!A:Z');
+        const headers = rows[0].map(h => (h || '').trim());
+
+        // Helper to get index
+        const getIdx = (name) => headers.findIndex(h => h.toLowerCase().includes(name.toLowerCase()));
+
+        const idxClient = getIdx('Client');
+        const idxProject = getIdx('Project');
+        const idxProduct = getIdx('Product');
+        const idxDate = getIdx('Date');
+        const idxRejQty = getIdx('Qty Rejected');
+
+        if (idxClient === -1 || idxProject === -1) {
+            console.error('Could not find required headers to match row for deletion');
+            return;
+        }
+
+        // 2. Find the row index (1-based for API, but array is 0-based)
+        // We search from the END because recent entries are at the bottom
+        let rowIndexToDelete = -1;
+
+        for (let i = rows.length - 1; i >= 1; i--) {
+            const r = rows[i];
+
+            // Loose matching to account for formatting differences
+            const matchClient = (r[idxClient] || '').trim() === (entry.client_name || '').trim();
+            const matchProject = (r[idxProject] || '').trim() === (entry.project_name || '').trim();
+            const matchProduct = (r[idxProduct] || '').trim() === (entry.product || '').trim();
+            // Date might differ in format (Locales), so we might skip it or be very loose
+            // const matchDate = (r[idxDate] || '').includes(entry.date); 
+            const matchQty = parseFloat(r[idxRejQty]) === parseFloat(entry.qty_rejected);
+
+            if (matchClient && matchProject && matchProduct && matchQty) {
+                rowIndexToDelete = i; // 0-based index in 'rows'
+                break; // Delete the most recent match
+            }
+        }
+
+        if (rowIndexToDelete === -1) {
+            console.warn('Google Sheet row not found for deletion:', entry);
+            return;
+        }
+
+        console.log(`Deleting Google Sheet row ${rowIndexToDelete + 1} for ${entry.client_name} - ${entry.product}`);
+
+        // 3. Delete the row using batchUpdate
+        // sheetId is needed here. We need to fetch sheet metadata to get the integer sheetId (gid)
+        const metaUrl = `https://sheets.googleapis.com/v4/spreadsheets/${BACKEND_SHEET_ID}`;
+        const metaRes = await fetch(metaUrl, { headers: { Authorization: `Bearer ${token}` } });
+        const meta = await metaRes.json();
+
+        const sheet = meta.sheets.find(s => s.properties.title === 'Rejection Log');
+        if (!sheet) {
+            console.error('Sheet "Rejection Log" not found');
+            return;
+        }
+        const sheetId = sheet.properties.sheetId;
+
+        const deleteRequest = {
+            requests: [{
+                deleteDimension: {
+                    range: {
+                        sheetId: sheetId,
+                        dimension: "ROWS",
+                        startIndex: rowIndexToDelete,
+                        endIndex: rowIndexToDelete + 1
+                    }
+                }
+            }]
+        };
+
+        const batchUrl = `https://sheets.googleapis.com/v4/spreadsheets/${BACKEND_SHEET_ID}:batchUpdate`;
+        await fetch(batchUrl, {
+            method: 'POST',
+            headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(deleteRequest)
+        });
+
+        console.log('Google Sheet row deleted successfully.');
+
+    } catch (error) {
+        console.error('Error deleting from Google Sheet:', error);
+        // Don't throw, so we don't block the UI if sheet deletion fails (it's secondary)
     }
 }
 
