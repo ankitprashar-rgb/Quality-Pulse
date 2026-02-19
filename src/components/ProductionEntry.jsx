@@ -16,6 +16,7 @@ export default function ProductionEntry({ clients, mediaOptions, onSaved, showTo
     const [loadingProjects, setLoadingProjects] = useState(false);
     const [lineItems, setLineItems] = useState([]);
     const [isSaving, setIsSaving] = useState(false);
+    const [showCompletionModal, setShowCompletionModal] = useState(false);
 
     const [globalDeliveredStats, setGlobalDeliveredStats] = useState({});
     const [supabaseMasters, setSupabaseMasters] = useState({ printMedia: [], lamMedia: [], printers: [] });
@@ -124,7 +125,7 @@ export default function ProductionEntry({ clients, mediaOptions, onSaved, showTo
             const projectData = projects.filter(p => p.project === projectName);
             const isComplete = checkProjectCompletion(projectData, stats);
             if (isComplete) {
-                showToast(`Project "${projectName}" Completed! 🚀`, 5000);
+                setShowCompletionModal(true);
             }
         } catch (error) {
             console.error('Error fetching global stats:', error);
@@ -401,7 +402,7 @@ export default function ProductionEntry({ clients, mediaOptions, onSaved, showTo
                 const isComplete = checkProjectCompletion(projectData, updatedStats);
 
                 if (isComplete) {
-                    showToast(`Project "${projectName}" Completed! 🚀`, 5000);
+                    setShowCompletionModal(true);
                 } else {
                     showToast('Entry saved successfully!');
                 }
@@ -577,6 +578,23 @@ export default function ProductionEntry({ clients, mediaOptions, onSaved, showTo
                     {mergedOptions.printers.map((m, idx) => <option key={idx} value={m} />)}
                 </datalist>
             </div>
+
+            {showCompletionModal && (
+                <div className="completion-modal-overlay">
+                    <div className="completion-modal">
+                        <div className="completion-icon">🚀</div>
+                        <h2>Project Completed!</h2>
+                        <p>All items for <strong>{projectName}</strong> have been delivered.</p>
+                        <button
+                            className="primary-btn"
+                            onClick={() => setShowCompletionModal(false)}
+                            style={{ marginTop: '20px', width: '100%', fontSize: '1.1rem' }}
+                        >
+                            OK
+                        </button>
+                    </div>
+                </div>
+            )}
         </section>
     );
 }
