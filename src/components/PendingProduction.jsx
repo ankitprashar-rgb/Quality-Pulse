@@ -15,95 +15,97 @@ export default function PendingProduction({ onSelectProject }) {
         return saved ? JSON.parse(saved) : [];
     });
 
-    useEffect(() => { loadPendingProduction(); }, [archivedKeys]);
+    useEffect(() => {
+        async function loadPendingProduction() {
+            setLoading(true);
+            try {
+                const projects = await fetchAllProjects();
+                const logs = await fetchRejectionLogs({});
+                const today = new Date();
+                const items = [];
 
-    async function loadPendingProduction() {
-        setLoading(true);
-        try {
-            const projects = await fetchAllProjects();
-            const logs = await fetchRejectionLogs({});
-            const today = new Date();
-            const items = [];
-
-            const projectMap = new Map();
-            projects.forEach(p => {
-                const key = `${p.client.trim()}|||${p.project.trim()}`;
-                if (!projectMap.has(key)) {
-                    projectMap.set(key, {
-                        client: p.client, project: p.project,
-                        vertical: p.vertical, masterQty: 0,
-                        deliveryDate: p.deliveryDate,
-                        approvalDate: p.approvalDate
-                    });
-                }
-                const g = projectMap.get(key);
-                g.masterQty += p.masterQty;
-                if (p.deliveryDate && (!g.deliveryDate || new Date(p.deliveryDate) < new Date(g.deliveryDate))) {
-                    g.deliveryDate = p.deliveryDate;
-                }
-                if (p.approvalDate && (!g.approvalDate || new Date(p.approvalDate) < new Date(g.approvalDate))) {
-                    g.approvalDate = p.approvalDate;
-                }
-            });
-
-            Array.from(projectMap.values()).forEach(project => {
-                const key = `${project.client}|||${project.project}`;
-                const projectLogs = logs.filter(
-                    log => log.client_name === project.client && log.project_name === project.project
-                );
-                const totalDelivered = projectLogs.reduce((sum, log) => sum + (log.qty_delivered || 0), 0);
-                const pendingQty = Math.max(0, project.masterQty - totalDelivered);
-
-                let deliveryDate = project.deliveryDate ? new Date(project.deliveryDate) : null;
-                const isManualArchive = archivedKeys.includes(key);
-
-                let overdueDays = 0;
-                const isOverdue = deliveryDate && deliveryDate < today;
-
-                let status = isManualArchive ? 'archived' : 'yellow';
-
-                if (!isManualArchive) {
-                    if (isOverdue) {
-                        status = 'red';
-                        overdueDays = Math.floor((today - deliveryDate) / (1000 * 60 * 60 * 24));
-                    } else if (projectLogs.length > 0 && pendingQty > 0) {
-                        status = 'orange';
-                    } else if (pendingQty === 0) {
-                        status = 'green';
-                    } else {
-                        status = 'yellow'; // 0 entries logged yet
+                const projectMap = new Map();
+                projects.forEach(p => {
+                    const key = `${p.client.trim()}|||${p.project.trim()}`;
+                    if (!projectMap.has(key)) {
+                        projectMap.set(key, {
+                            client: p.client, project: p.project,
+                            vertical: p.vertical, masterQty: 0,
+                            deliveryDate: p.deliveryDate,
+                            approvalDate: p.approvalDate
+                        });
                     }
-                }
+                    const g = projectMap.get(key);
+                    g.masterQty += p.masterQty;
+                    if (p.deliveryDate && (!g.deliveryDate || new Date(p.deliveryDate) < new Date(g.deliveryDate))) {
+                        g.deliveryDate = p.deliveryDate;
+                    }
+                    if (p.approvalDate && (!g.approvalDate || new Date(p.approvalDate) < new Date(g.approvalDate))) {
+                        g.approvalDate = p.approvalDate;
+                    }
+                });
 
-                if (pendingQty > 0 || status === 'archived') {
-                    items.push({
-                        key,
-                        client: project.client, project: project.project,
-                        vertical: project.vertical, masterQty: project.masterQty,
-                        delivered: totalDelivered, pendingQty,
-                        deliveryDate, approvalDate: project.approvalDate,
-                        status, overdueDays
-                    });
-                }
-            });
+                Array.from(projectMap.values()).forEach(project => {
+                    const key = `${project.client}|||${project.project}`;
+                    const projectLogs = logs.filter(
+                        log => log.client_name === project.client && log.project_name === project.project
+                    );
+                    const totalDelivered = projectLogs.reduce((sum, log) => sum + (log.qty_delivered || 0), 0);
+                    const pendingQty = Math.max(0, project.masterQty - totalDelivered);
 
-            items.sort((a, b) => {
-                const statusOrder = { red: 0, orange: 1, yellow: 2, green: 3, archived: 4 };
-                if (statusOrder[a.status] !== statusOrder[b.status]) {
-                    return statusOrder[a.status] - statusOrder[b.status];
-                }
-                const dateA = a.deliveryDate ? a.deliveryDate.getTime() : Infinity;
-                const dateB = b.deliveryDate ? b.deliveryDate.getTime() : Infinity;
-                return dateA - dateB;
-            });
+                    let deliveryDate = project.deliveryDate ? new Date(project.deliveryDate) : null;
+                    const isManualArchive = archivedKeys.includes(key);
 
-            setPendingItems(items);
-        } catch (error) {
-            console.error('Error loading pending production:', error);
-        } finally {
-            setLoading(false);
+                    let overdueDays = 0;
+                    const isOverdue = deliveryDate && deliveryDate < today;
+
+                    let status = isManualArchive ? 'archived' : 'yellow';
+
+                    if (!isManualArchive) {
+                        if (pendingQty <= 0) {
+                            status = 'green';
+                        } else if (isOverdue) {
+                            status = 'red';
+                            overdueDays = Math.floor((today - deliveryDate) / (1000 * 60 * 60 * 24));
+                        } else if (projectLogs.length > 0) {
+                            status = 'orange';
+                        } else {
+                            status = 'yellow'; // 0 entries logged yet
+                        }
+                    }
+
+                    if (pendingQty > 0 || status === 'archived') {
+                        items.push({
+                            key,
+                            client: project.client, project: project.project,
+                            vertical: project.vertical, masterQty: project.masterQty,
+                            delivered: totalDelivered, pendingQty,
+                            deliveryDate, approvalDate: project.approvalDate,
+                            status, overdueDays
+                        });
+                    }
+                });
+
+                items.sort((a, b) => {
+                    const statusOrder = { red: 0, orange: 1, yellow: 2, green: 3, archived: 4 };
+                    if (statusOrder[a.status] !== statusOrder[b.status]) {
+                        return statusOrder[a.status] - statusOrder[b.status];
+                    }
+                    const dateA = a.deliveryDate ? a.deliveryDate.getTime() : Infinity;
+                    const dateB = b.deliveryDate ? b.deliveryDate.getTime() : Infinity;
+                    return dateA - dateB;
+                });
+
+                setPendingItems(items);
+            } catch (error) {
+                console.error('Error loading pending production:', error);
+            } finally {
+                setLoading(false);
+            }
         }
-    }
+
+        loadPendingProduction();
+    }, [archivedKeys]);
 
     const toggleArchive = (e, key) => {
         e.stopPropagation();

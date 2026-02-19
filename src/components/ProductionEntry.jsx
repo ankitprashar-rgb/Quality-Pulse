@@ -216,8 +216,8 @@ export default function ProductionEntry({ clients, mediaOptions, onSaved, showTo
         const inStock = Math.max(0, delivered - masterQty);
 
         // Global logic
-        // Trim product name to match keys in stats map
-        const globalDelivered = globalDeliveredStats[item.product.trim()] || 0;
+        // Trim product name to match keys in stats map (case-insensitive)
+        const globalDelivered = globalDeliveredStats[item.product.trim().toLowerCase()] || 0;
         const remaining = masterQty - (globalDelivered + delivered);
 
         return { totalRej, rejectionPercent, delivered, remaining, inStock };
@@ -340,7 +340,24 @@ export default function ProductionEntry({ clients, mediaOptions, onSaved, showTo
             setDate(getTodayDate());
 
             onSaved();
-            showToast('Entry saved successfully!');
+
+
+            // Calculate overall project completion
+            // Calculate overall project completion
+
+            // Note: This is an approximation since we don't hold the full project context in state easily here
+            // But usually users enter data for the remaining items.
+            // A better check:
+            const isFullyDelivered = lineItems.every(item => {
+                const metrics = calculateLineItemMetrics(item);
+                return metrics.remaining <= 0;
+            });
+
+            if (isFullyDelivered) {
+                showToast(`Project "${projectName}" Completed! 🚀`, 5000);
+            } else {
+                showToast('Entry saved successfully!');
+            }
         } catch (error) {
             console.error('Error saving entry:', error);
             showToast('Error saving entry. Please check console for details.');

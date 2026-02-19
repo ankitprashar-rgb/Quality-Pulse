@@ -238,14 +238,14 @@ export async function fetchProjectDeliveredStats(projectName) {
 
     const rows = await fetchSheetData(BACKEND_SHEET_ID, 'Rejection Log!A:Z');
     const data = parseSheetData(rows);
-    const targetProject = projectName.trim();
+    const targetProject = (projectName || '').trim().toLowerCase();
 
     const stats = {};
 
     data.forEach(row => {
-        const pName = (getValue(row, ['Project Name', 'Project']) || '').trim();
+        const pName = (getValue(row, ['Project Name', 'Project']) || '').trim().toLowerCase();
         if (pName === targetProject) {
-            const product = (getValue(row, ['Product / Panel', 'Product', 'Panel']) || '').trim();
+            const product = (getValue(row, ['Product / Panel', 'Product', 'Panel']) || '').trim().toLowerCase();
             const delivered = parseFloat(getValue(row, ['Qty Delivered', 'Delivered'])) || 0;
 
             if (product) {
