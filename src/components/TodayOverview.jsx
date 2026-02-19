@@ -352,7 +352,11 @@ export default function TodayOverview() {
                                                                                     <button className="icon-btn edit" onClick={e => { e.stopPropagation(); startEdit(row); }} aria-label="Edit Entry">
                                                                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
                                                                                     </button>
-                                                                                    <button className="icon-btn delete" onClick={e => { e.stopPropagation(); setDeleteConfirm(row.id); }} aria-label="Delete Entry">
+                                                                                    <button className="icon-btn delete" onClick={e => {
+                                                                                        e.stopPropagation();
+                                                                                        if (row.id) setDeleteConfirm(row.id);
+                                                                                        else console.error('Missing ID for delete');
+                                                                                    }} aria-label="Delete Entry">
                                                                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" /></svg>
                                                                                     </button>
                                                                                     <button className="icon-btn export" onClick={e => { e.stopPropagation(); exportEntry(row); }} aria-label="Export Excel">
@@ -421,7 +425,7 @@ export default function TodayOverview() {
             </div>
 
             {deleteConfirm && (
-                <div className="modal-overlay" onClick={() => setDeleteConfirm(null)}>
+                <div className="modal-overlay" style={{ zIndex: 99999 }} onClick={() => setDeleteConfirm(null)}>
                     <div className="modal-box" onClick={e => e.stopPropagation()}>
                         <div className="modal-title">Delete Entry</div>
                         <p>Are you sure you want to delete this entry? This action cannot be undone.</p>
