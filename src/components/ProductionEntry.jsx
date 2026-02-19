@@ -122,33 +122,50 @@ export default function ProductionEntry({ clients, mediaOptions, onSaved, showTo
 
     function loadLineItems() {
         const projectData = projects.filter(p => p.project === projectName);
-        if (projectData.length > 0) {
-            const items = projectData.map((p, idx) => ({
-                id: idx,
-                product: p.product || '',
-                printMedia: p.printMedia || '',
-                lamMedia: p.lamMedia || '',
-                size: p.size || '',
-                masterQty: p.masterQty || 0,
-                batchQty: 0,
-                designRej: 0,
-                printRej: 0,
-                lamRej: 0,
-                cutRej: 0,
-                packRej: 0,
-                mediaRej: 0,
-                reason: '',
-                images: {
-                    design: [],
-                    print: [],
-                    lamination: [],
-                    cut: [],
-                    packaging: [],
-                    media: []
-                }
-            }));
-            setLineItems(items);
-        }
+
+        // Aggregate master qty by product name (case-insensitive)
+        const aggregatedMap = new Map();
+
+        projectData.forEach(p => {
+            const key = (p.product || '').trim().toLowerCase();
+            if (!key) return;
+
+            if (!aggregatedMap.has(key)) {
+                aggregatedMap.set(key, {
+                    ...p,
+                    masterQty: parseFloat(p.masterQty) || 0
+                });
+            } else {
+                const existing = aggregatedMap.get(key);
+                existing.masterQty += (parseFloat(p.masterQty) || 0);
+            }
+        });
+
+        const items = Array.from(aggregatedMap.values()).map((p, idx) => ({
+            id: idx,
+            product: p.product || '',
+            printMedia: p.printMedia || '',
+            lamMedia: p.lamMedia || '',
+            size: p.size || '',
+            masterQty: p.masterQty || 0,
+            batchQty: 0,
+            designRej: 0,
+            printRej: 0,
+            lamRej: 0,
+            cutRej: 0,
+            packRej: 0,
+            mediaRej: 0,
+            reason: '',
+            images: {
+                design: [],
+                print: [],
+                lamination: [],
+                cut: [],
+                packaging: [],
+                media: []
+            }
+        }));
+        setLineItems(items);
     }
 
     function updateLineItem(id, field, value) {
@@ -217,7 +234,8 @@ export default function ProductionEntry({ clients, mediaOptions, onSaved, showTo
 
         // Global logic
         // Trim product name to match keys in stats map (case-insensitive)
-        const globalDelivered = globalDeliveredStats[item.product.trim().toLowerCase()] || 0;
+        const productKey = (item.product || '').trim().toLowerCase();
+        const globalDelivered = globalDeliveredStats[productKey] || 0;
         const remaining = masterQty - (globalDelivered + delivered);
 
         return { totalRej, rejectionPercent, delivered, remaining, inStock };
