@@ -146,6 +146,9 @@ export default function ProductionEntry({ clients, mediaOptions, onSaved, showTo
             }
         });
 
+        // Check for project completion immediately upon loading stats
+        checkProjectCompletion(projectData, stats);
+
         const items = Array.from(aggregatedMap.values()).map((p, idx) => ({
             id: idx,
             product: p.product || '',
@@ -246,6 +249,28 @@ export default function ProductionEntry({ clients, mediaOptions, onSaved, showTo
         return { totalRej, rejectionPercent, delivered, remaining, inStock };
     }
 
+    // Helper: Check if ENTIRE project is complete
+    function checkProjectCompletion(projectData, stats) {
+        if (!projectData || projectData.length === 0) return false;
+
+        // Aggregate ALL master quantities involved in this project
+        const masterTotals = {};
+        projectData.forEach(p => {
+            const key = (p.product || '').trim().toLowerCase().replace(/\s+/g, '');
+            if (key) {
+                masterTotals[key] = (masterTotals[key] || 0) + (parseFloat(p.masterQty) || 0);
+            }
+        });
+
+        // Check if every product has delivered >= master
+        const isComplete = Object.entries(masterTotals).every(([key, totalMaster]) => {
+            const totalDelivered = stats[key] || 0;
+            return totalDelivered >= totalMaster;
+        });
+
+        return isComplete;
+    }
+
     async function handleSave() {
         // Validation
         if (!clientName || !projectName || lineItems.length === 0) {
@@ -334,11 +359,6 @@ export default function ProductionEntry({ clients, mediaOptions, onSaved, showTo
                     await saveRejectionEntry(entry);
                 } catch (dbError) {
                     console.error('Supabase save failed:', dbError);
-                    // Decide if we should continue or throw. 
-                    // For now, log but proceed to Sheet if possible, or throw to stop?
-                    // Usually database is source of truth, so we should probably throw or alert.
-                    // But user specifically wants Sheets to work even if DB has issues (like RLS).
-                    // We'll treat them somewhat independently but alert on failure.
                     showToast('Warning: Database save failed, attempting Google Sheets backup...');
                 }
 
@@ -364,23 +384,23 @@ export default function ProductionEntry({ clients, mediaOptions, onSaved, showTo
 
             onSaved();
 
+            // Re-fetch stats to check for completion after save
+            try {
+                const updatedStats = await fetchProjectDeliveredStats(clientName, projectName);
+                setGlobalDeliveredStats(updatedStats);
+                const projectData = projects.filter(p => p.project === projectName);
+                const isComplete = checkProjectCompletion(projectData, updatedStats);
 
-            // Calculate overall project completion
-            // Calculate overall project completion
-
-            // Note: This is an approximation since we don't hold the full project context in state easily here
-            // But usually users enter data for the remaining items.
-            // A better check:
-            const isFullyDelivered = lineItems.every(item => {
-                const metrics = calculateLineItemMetrics(item);
-                return metrics.remaining <= 0;
-            });
-
-            if (isFullyDelivered) {
-                showToast(`Project "${projectName}" Completed! 🚀`, 5000);
-            } else {
+                if (isComplete) {
+                    showToast(`Project "${projectName}" Completed! 🚀`, 5000);
+                } else {
+                    showToast('Entry saved successfully!');
+                }
+            } catch (statsError) {
+                console.error("Error fetching updated stats:", statsError);
                 showToast('Entry saved successfully!');
             }
+
         } catch (error) {
             console.error('Error saving entry:', error);
             showToast('Error saving entry. Please check console for details.');
