@@ -696,7 +696,7 @@ function LineItemCard({ item, index, metrics, onUpdate, onRemove }) {
                         {Math.max(0, metrics.remaining).toFixed(2)}
                     </span>
                 </div>
-                {matches.inStock > 0 && (
+                {metrics.inStock > 0 && (
                     <div className="metric-inline">
                         <span className="metric-inline-label">In Stock:</span>
                         <span className="metric-inline-value text-green">{metrics.inStock.toFixed(2)}</span>
