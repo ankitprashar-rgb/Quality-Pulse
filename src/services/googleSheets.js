@@ -247,7 +247,9 @@ export async function fetchProjectDeliveredStats(clientName, projectName) {
             const delivered = parseFloat(getValue(row, ['Qty Delivered', 'Delivered'])) || 0;
 
             if (product) {
-                stats[product] = (stats[product] || 0) + delivered;
+                // Normalize key for stats map: lowercase + no spaces
+                const key = product.replace(/\s+/g, '');
+                stats[key] = (stats[key] || 0) + delivered;
             }
         }
     });

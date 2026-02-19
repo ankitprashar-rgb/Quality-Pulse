@@ -238,8 +238,8 @@ export default function ProductionEntry({ clients, mediaOptions, onSaved, showTo
         const inStock = Math.max(0, delivered - masterQty);
 
         // Global logic
-        // Trim product name to match keys in stats map (case-insensitive)
-        const productKey = (item.product || '').trim().toLowerCase();
+        // Normalize key to match stats map (lowercase + no spaces)
+        const productKey = (item.product || '').trim().toLowerCase().replace(/\s+/g, '');
         const globalDelivered = globalDeliveredStats[productKey] || 0;
         const remaining = masterQty - (globalDelivered + delivered);
 
