@@ -1,9 +1,7 @@
+import React, { useState, useEffect } from 'react';
 import { getTodayDate } from '../utils/helpers';
-// ...
-// Inside loadProjects
-const todayStr = getTodayDate();
-const logs = await fetchRejectionLogs({ fromDate: todayStr, toDate: todayStr });
 import { fetchRejectionLogs, deleteRejectionEntry, updateRejectionEntry } from '../services/supabase';
+
 import { formatPercent, formatNum } from '../utils/helpers';
 import * as XLSX from 'xlsx';
 import { generateQualityReport } from '../services/pdfGenerator';
